@@ -26,6 +26,9 @@ spec:
             - { name: STORAGE_BACKEND, value: postgres }
             - { name: FASTEMBED_CACHE_PATH, value: /app/models/fastembed }
             - { name: HOST, value: "0.0.0.0" }   # non-loopback bind requires API_TOKEN
+            # LLM backend is the in-cluster chatgpt-browser bridge. Overrides the
+            # stale LLM_BASE_URL in the secret (old docker-bridge IP 172.18.0.1).
+            - { name: LLM_BASE_URL, value: "http://chatgpt-browser.platform.svc:8766/v1" }
           envFrom:
             - secretRef: { name: agentic-assistent }   # API_TOKEN, DATABASE_URL, tokens
           volumeMounts:

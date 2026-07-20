@@ -26,6 +26,8 @@ spec:
             - { name: BROWSER_PORT, value: "8766" }
             - { name: HEADLESS, value: "1" }
             - { name: STATE, value: /state/chatgpt-state.json }
+            # Drive a specific Custom GPT (CHAT_URL reads GIZMO_URL).
+            - { name: GIZMO_URL, value: "https://chatgpt.com/g/g-6a5d3210a0988191bd2d01f3df2803af-api" }
           ports:
             - containerPort: 8766
           volumeMounts:
