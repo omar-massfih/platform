@@ -1,0 +1,28 @@
+#cloud-config
+# Minimal bootstrap. The platform Ansible (ansible/site.yml) installs k3s +
+# everything else; this just prepares the host and the omar user.
+users:
+  - name: omar
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [sudo]
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_authorized_keys}
+
+package_update: true
+packages:
+  - curl
+  - ca-certificates
+  - git
+
+runcmd:
+  # Loosen the OCI default iptables so k3s/Traefik can bind 80/443 (host firewall
+  # is managed separately via ufw in the platform playbooks).
+  - [ bash, -lc, "systemctl is-enabled --quiet netfilter-persistent && netfilter-persistent flush || true" ]
+  # Give root a filesystem reserve up front so a full disk never locks out sshd
+  # (the platform disk_guard role also enforces this).
+  - [ bash, -lc, "tune2fs -r 393216 $(findmnt -no SOURCE /) || true" ]
+
+write_files:
+  - path: /var/log/platform-bootstrap.done
+    content: "cloud-init finished\n"

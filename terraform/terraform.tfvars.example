@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is git-ignored.
+compartment_ocid    = "ocid1.tenancy.oc1..aaaa..."   # tenancy root today
+region              = "eu-stockholm-1"
+availability_domain = "beDq:EU-STOCKHOLM-1-AD-1"
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+
+# Defaults already match the live box; override only to change it:
+# instance_name   = "agentic-assistant"
+# ocpus           = 2
+# memory_gbs      = 12
+# boot_volume_gbs = 47
+# open_public_ssh = false
