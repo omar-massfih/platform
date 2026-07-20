@@ -10,7 +10,7 @@ resources:
   - platform/namespace.yaml
   - platform/codex-auth-pvc.yaml
   - apps/agentic-assistent
-  # - apps/chatgpt-proxy
+  - apps/chatgpt-proxy
   # - apps/chatgpt-browser
   # - apps/pr-pilot
   # - apps/pr-pilot-omarmassfih

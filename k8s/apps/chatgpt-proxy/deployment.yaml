@@ -19,12 +19,12 @@ spec:
       containers:
         - name: proxy
           image: ghcr.io/omar-massfih/chatgpt-proxy:latest
+          imagePullPolicy: IfNotPresent   # image imported into containerd (interim)
           # Bind 0.0.0.0 inside the pod (was 127.0.0.1:8765 on the VM); the
-          # Service keeps it cluster-internal. Adjust via the image's own config
-          # if it hardcodes the bind address.
+          # Service keeps it cluster-internal.
           env:
-            - { name: HOST, value: "0.0.0.0" }
-            - { name: PORT, value: "8765" }
+            - { name: PROXY_HOST, value: "0.0.0.0" }
+            - { name: PROXY_PORT, value: "8765" }
             - { name: CODEX_HOME, value: /home/app/.codex }
           ports:
             - containerPort: 8765
