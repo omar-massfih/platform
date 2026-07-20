@@ -1,0 +1,7 @@
+---
+- name: Disk-full safeguard (protect sshd/k3s)
+  hosts: k3s
+  become: true
+  tags: [disk-guard]
+  roles:
+    - disk_guard

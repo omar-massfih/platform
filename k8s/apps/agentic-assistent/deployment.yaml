@@ -19,6 +19,9 @@ spec:
       containers:
         - name: app
           image: ghcr.io/omar-massfih/agentic-assistent:latest
+          # IfNotPresent so k3s uses the image imported into containerd (interim,
+          # pre-ghcr). Switch to Always once images are pushed to ghcr with pinned tags.
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           env:

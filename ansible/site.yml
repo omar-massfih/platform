@@ -5,6 +5,7 @@
 # Or a single playbook: ansible-playbook playbooks/50-apps.yml
 - import_playbook: playbooks/00-prereqs.yml
 - import_playbook: playbooks/10-k3s.yml
+- import_playbook: playbooks/15-disk-guard.yml
 - import_playbook: playbooks/20-platform.yml
 - import_playbook: playbooks/30-secrets.yml
 - import_playbook: playbooks/40-data-migrate.yml

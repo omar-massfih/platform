@@ -1,0 +1,68 @@
+---
+# Durable protection against a full root filesystem taking down sshd/k3s.
+# Layers: (1) journald hard cap, (2) k3s kubelet image GC (default 85/80 — asserted),
+# (3) a systemd timer that prunes images/logs when disk crosses a threshold.
+
+- name: Ensure journald drop-in dir exists
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Cap journald disk usage
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/10-cap.conf
+    mode: "0644"
+    content: |
+      [Journal]
+      SystemMaxUse=200M
+      SystemKeepFree=1G
+  notify: restart journald
+
+- name: Install disk-guard script
+  ansible.builtin.copy:
+    src: disk-guard.sh
+    dest: /usr/local/sbin/disk-guard.sh
+    mode: "0755"
+
+- name: Install disk-guard service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/disk-guard.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Reclaim disk before root fills up (protects sshd/k3s)
+      [Service]
+      Type=oneshot
+      Environment=DISK_GUARD_THRESHOLD_PCT={{ disk_guard_threshold_pct | default(85) }}
+      ExecStart=/usr/local/sbin/disk-guard.sh
+
+- name: Install disk-guard timer (every 15 min)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/disk-guard.timer
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Run disk-guard periodically
+      [Timer]
+      OnBootSec=5min
+      OnUnitActiveSec=15min
+      Persistent=true
+      [Install]
+      WantedBy=timers.target
+
+- name: Enable and start disk-guard timer
+  ansible.builtin.systemd_service:
+    name: disk-guard.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Run disk-guard once now
+  ansible.builtin.command: /usr/local/sbin/disk-guard.sh
+  changed_when: false
+  register: guard_run
+
+- name: disk-guard output
+  ansible.builtin.debug:
+    var: guard_run.stdout_lines
