@@ -52,7 +52,7 @@
       Description=Reclaim disk before root fills up (protects sshd/k3s)
       [Service]
       Type=oneshot
-      Environment=DISK_GUARD_THRESHOLD_PCT={{ disk_guard_threshold_pct | default(85) }}
+      Environment=DISK_GUARD_THRESHOLD_PCT={{ disk_guard_threshold_pct | default(78) }}
       ExecStart=/usr/local/sbin/disk-guard.sh
 
 - name: Install disk-guard timer (every 15 min)
@@ -64,7 +64,7 @@
       Description=Run disk-guard periodically
       [Timer]
       OnBootSec=5min
-      OnUnitActiveSec=15min
+      OnUnitActiveSec=5min
       Persistent=true
       [Install]
       WantedBy=timers.target

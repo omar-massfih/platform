@@ -3,7 +3,7 @@
 # Runs on a timer: if free space drops below the threshold, reclaim aggressively.
 set -euo pipefail
 
-THRESHOLD_PCT="${DISK_GUARD_THRESHOLD_PCT:-85}"   # act when Use% >= this
+THRESHOLD_PCT="${DISK_GUARD_THRESHOLD_PCT:-78}"   # act when Use% >= this
 used_pct=$(df --output=pcent / | tail -1 | tr -dc '0-9')
 
 log() { logger -t disk-guard "$*"; echo "disk-guard: $*"; }
