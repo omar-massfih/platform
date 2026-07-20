@@ -12,8 +12,8 @@ resources:
   - apps/agentic-assistent
   - apps/chatgpt-proxy
   - apps/chatgpt-browser
-  # - apps/pr-pilot
-  # - apps/pr-pilot-omarmassfih
+  - apps/pr-pilot
+  - apps/pr-pilot-omarmassfih
 
 # agentic-assistent currently runs from an image imported into containerd
 # (imagePullPolicy: IfNotPresent). When ghcr publishing is wired up, pin a tag here:

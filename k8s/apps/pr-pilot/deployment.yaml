@@ -5,32 +5,32 @@ metadata:
   labels: { app: pr-pilot }
 spec:
   replicas: 1
-  strategy: { type: Recreate }
+  strategy: { type: Recreate }   # RWO volumes + single Telegram poller
   selector:
     matchLabels: { app: pr-pilot }
   template:
     metadata:
       labels: { app: pr-pilot }
     spec:
-      imagePullSecrets:
-        - name: ghcr
       securityContext:
         fsGroup: 1000
       containers:
         - name: pr-pilot
           image: ghcr.io/omar-massfih/pr-pilot:latest
+          imagePullPolicy: IfNotPresent   # image imported into containerd (interim)
           # wakiru instance. Outbound only (Telegram long-poll + git push) — no port.
+          # Default config file is ./pr-pilot.toml in the workdir (/home/omar).
           args: ["telegram"]
           env:
-            # Repoint opencode/pr-pilot from the old 127.0.0.1:8765 loopback to the
-            # in-cluster proxy Service. The image's opencode.json must use this URL.
-            - { name: CHATGPT_PROXY_BASE_URL, value: "http://chatgpt-proxy.platform.svc:8765/v1" }
-            - { name: PR_PILOT_STATE_DIR, value: /home/app/.pr-pilot }
+            - { name: CODEX_HOME, value: /home/omar/.codex }   # profile_provider=chatgpt
           envFrom:
-            - secretRef: { name: pr-pilot }   # TELEGRAM_BOT_TOKEN, GH_TOKEN, GIT_AUTHOR_*
+            - secretRef: { name: pr-pilot }   # TELEGRAM_BOT_TOKEN, GH_TOKEN
           volumeMounts:
-            - { name: state, mountPath: /home/app/.pr-pilot }
-            - { name: workspace, mountPath: /home/app/wakiru }
+            - { name: state, mountPath: /home/omar/.pr-pilot }
+            - { name: workspace, mountPath: /home/omar/wakiru }
+            - { name: codex-auth, mountPath: /home/omar/.codex }
+            - { name: config, mountPath: /home/omar/pr-pilot.toml, subPath: pr-pilot.toml }
+            - { name: config, mountPath: /home/omar/.config/opencode/opencode.json, subPath: opencode.json }
           resources:
             requests: { cpu: "100m", memory: "512Mi" }
             limits: { memory: "2Gi" }
@@ -39,3 +39,7 @@ spec:
           persistentVolumeClaim: { claimName: pr-pilot-state }
         - name: workspace
           persistentVolumeClaim: { claimName: pr-pilot-workspace }
+        - name: codex-auth
+          persistentVolumeClaim: { claimName: codex-auth }
+        - name: config
+          configMap: { name: pr-pilot-config }
