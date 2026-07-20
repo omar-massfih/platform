@@ -3,23 +3,21 @@ kind: Kustomization
 
 namespace: platform
 
+# Reconciled by Flux (clusters/omar/flux-system). Only components with a published
+# image are enabled. Uncomment each app as its image lands in ghcr (or is imported
+# into containerd), then commit — Flux applies it automatically.
 resources:
   - platform/namespace.yaml
   - platform/codex-auth-pvc.yaml
   - apps/agentic-assistent
-  - apps/chatgpt-proxy
-  - apps/chatgpt-browser
-  - apps/pr-pilot
-  - apps/pr-pilot-omarmassfih
+  # - apps/chatgpt-proxy
+  # - apps/chatgpt-browser
+  # - apps/pr-pilot
+  # - apps/pr-pilot-omarmassfih
 
-# All app images live under ghcr.io/omar-massfih. Override tags for a pinned
-# deploy with: `kustomize edit set image ghcr.io/omar-massfih/agentic-assistent=...:<sha>`
+# agentic-assistent currently runs from an image imported into containerd
+# (imagePullPolicy: IfNotPresent). When ghcr publishing is wired up, pin a tag here:
+#   kustomize edit set image ghcr.io/omar-massfih/agentic-assistent=...:<sha>
 images:
   - name: ghcr.io/omar-massfih/agentic-assistent
-    newTag: latest
-  - name: ghcr.io/omar-massfih/chatgpt-proxy
-    newTag: latest
-  - name: ghcr.io/omar-massfih/chatgpt-browser
-    newTag: latest
-  - name: ghcr.io/omar-massfih/pr-pilot
     newTag: latest
