@@ -12,12 +12,14 @@ spec:
     metadata:
       labels: { app: pr-pilot-omarmassfih }
     spec:
+      imagePullSecrets:
+        - name: ghcr
       securityContext:
         fsGroup: 1000
       containers:
         - name: pr-pilot
           image: ghcr.io/omar-massfih/pr-pilot:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always   # pull from ghcr
           # omarmassfih.no group instance: same image, own config toml + Telegram bot.
           args: ["--config", "pr-pilot-omarmassfih.toml", "telegram"]
           env:

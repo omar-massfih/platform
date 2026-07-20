@@ -19,7 +19,7 @@ spec:
       containers:
         - name: proxy
           image: ghcr.io/omar-massfih/chatgpt-proxy:latest
-          imagePullPolicy: IfNotPresent   # image imported into containerd (interim)
+          imagePullPolicy: Always   # pull from ghcr
           # Bind 0.0.0.0 inside the pod (was 127.0.0.1:8765 on the VM); the
           # Service keeps it cluster-internal.
           env:

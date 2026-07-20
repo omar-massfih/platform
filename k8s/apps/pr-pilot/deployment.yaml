@@ -12,12 +12,14 @@ spec:
     metadata:
       labels: { app: pr-pilot }
     spec:
+      imagePullSecrets:
+        - name: ghcr
       securityContext:
         fsGroup: 1000
       containers:
         - name: pr-pilot
           image: ghcr.io/omar-massfih/pr-pilot:latest
-          imagePullPolicy: IfNotPresent   # image imported into containerd (interim)
+          imagePullPolicy: Always   # pull from ghcr
           # wakiru instance. Outbound only (Telegram long-poll + git push) — no port.
           # Default config file is ./pr-pilot.toml in the workdir (/home/omar).
           args: ["telegram"]

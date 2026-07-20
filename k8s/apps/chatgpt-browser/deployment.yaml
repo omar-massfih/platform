@@ -17,7 +17,7 @@ spec:
       containers:
         - name: browser
           image: ghcr.io/omar-massfih/chatgpt-browser:latest
-          imagePullPolicy: IfNotPresent   # image imported into containerd (interim)
+          imagePullPolicy: Always   # pull from ghcr
           # Headless chromium bridge (chatgpt.com web -> OpenAI chat-completions).
           # Session state comes from the chatgpt-browser-state Secret; /dev/shm
           # sized up so chromium doesn't crash.

@@ -15,9 +15,14 @@ resources:
   - apps/pr-pilot
   - apps/pr-pilot-omarmassfih
 
-# agentic-assistent currently runs from an image imported into containerd
-# (imagePullPolicy: IfNotPresent). When ghcr publishing is wired up, pin a tag here:
-#   kustomize edit set image ghcr.io/omar-massfih/agentic-assistent=...:<sha>
+# All images pulled from ghcr, pinned to a build tag. Bump these (and push new
+# images) to roll out a new version; Flux applies the change.
 images:
   - name: ghcr.io/omar-massfih/agentic-assistent
-    newTag: latest
+    newTag: "20260720"
+  - name: ghcr.io/omar-massfih/chatgpt-proxy
+    newTag: "20260720"
+  - name: ghcr.io/omar-massfih/chatgpt-browser
+    newTag: "20260720"
+  - name: ghcr.io/omar-massfih/pr-pilot
+    newTag: "20260720"
