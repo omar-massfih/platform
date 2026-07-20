@@ -1,13 +1,20 @@
-# Reference Dockerfile for chatgpt-browser-bridge (headless ChatGPT web -> OpenAI).
-# Needs a real browser, so base on the Playwright image which bundles chromium +
-# system libs. Confirm the app's listen port (assumed 8766) and entrypoint.
-FROM mcr.microsoft.com/playwright/python:v1.49.0-noble
+# Dockerfile for chatgpt-browser-bridge (headless ChatGPT web -> OpenAI).
+# Self-contained: installs playwright + chromium so versions always match.
+# Browsers go to a world-readable path so the non-root runtime user can use them.
+FROM python:3.13-slim
 
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN pip install --no-cache-dir playwright fastapi "uvicorn[standard]" \
+    && playwright install --with-deps chromium \
+    && chmod -R a+rx /ms-playwright
+
+RUN useradd --create-home --uid 1000 app
 WORKDIR /app
-COPY requirements.txt* pyproject.toml* ./
-RUN pip install --no-cache-dir -r requirements.txt 2>/dev/null || pip install --no-cache-dir -e .
+COPY browser_backend.py .
+RUN chown -R app:app /app
+USER app
 
-COPY . .
-ENV HOST=0.0.0.0 PORT=8766
+# browser_backend.py reads BROWSER_HOST/BROWSER_PORT/HEADLESS/STATE from env.
+ENV BROWSER_HOST=0.0.0.0 BROWSER_PORT=8766 HEADLESS=1 STATE=/state/chatgpt-state.json
 EXPOSE 8766
 CMD ["python", "browser_backend.py"]

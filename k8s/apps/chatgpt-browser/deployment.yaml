@@ -17,19 +17,26 @@ spec:
       containers:
         - name: browser
           image: ghcr.io/omar-massfih/chatgpt-browser:latest
-          # Headless-browser bridge (chatgpt.com web -> OpenAI chat-completions).
-          # Needs a chromium base image (e.g. mcr.microsoft.com/playwright) in its
-          # Dockerfile; give it shared memory so chromium doesn't crash.
+          imagePullPolicy: IfNotPresent   # image imported into containerd (interim)
+          # Headless chromium bridge (chatgpt.com web -> OpenAI chat-completions).
+          # Session state comes from the chatgpt-browser-state Secret; /dev/shm
+          # sized up so chromium doesn't crash.
           env:
-            - { name: HOST, value: "0.0.0.0" }
-            - { name: PORT, value: "8766" }
+            - { name: BROWSER_HOST, value: "0.0.0.0" }
+            - { name: BROWSER_PORT, value: "8766" }
+            - { name: HEADLESS, value: "1" }
+            - { name: STATE, value: /state/chatgpt-state.json }
           ports:
             - containerPort: 8766
           volumeMounts:
             - { name: dshm, mountPath: /dev/shm }
+            - { name: state, mountPath: /state, readOnly: true }
           resources:
             requests: { cpu: "100m", memory: "512Mi" }
             limits: { memory: "1500Mi" }
       volumes:
         - name: dshm
           emptyDir: { medium: Memory, sizeLimit: 256Mi }
+        - name: state
+          secret:
+            secretName: chatgpt-browser-state
