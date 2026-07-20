@@ -35,7 +35,7 @@ spec:
             - { name: state, mountPath: /state, readOnly: true }
           resources:
             requests: { cpu: "100m", memory: "512Mi" }
-            limits: { memory: "1500Mi" }
+            limits: { memory: "2048Mi" }   # headroom for chromium between page recycles
       volumes:
         - name: dshm
           emptyDir: { medium: Memory, sizeLimit: 256Mi }
