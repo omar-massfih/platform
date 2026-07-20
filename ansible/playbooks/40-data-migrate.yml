@@ -1,0 +1,59 @@
+---
+# Seed local-path PVCs from existing VM state BEFORE the app pods start.
+# local-path stores each PVC under /var/lib/rancher/k3s/storage/<pvc-id>. We create
+# the PVCs, discover their backing host paths, then copy the live data in. This is
+# idempotent-guarded so we never clobber data that was already migrated.
+- name: Migrate live VM state into PVCs
+  hosts: k3s
+  become: true
+  tags: [migrate]
+  vars:
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    # source path on the VM  ->  PVC name
+    migrations:
+      - { src: "/home/omar/agentic-assistent/memory", pvc: "agentic-memory" }
+      - { src: "/home/omar/agentic-assistent/models", pvc: "agentic-models" }
+      - { src: "/home/omar/.pr-pilot",               pvc: "pr-pilot-state" }
+      - { src: "/home/omar/.pr-pilot-omarmassfih",    pvc: "pr-pilot-omarmassfih-state" }
+      - { src: "/home/omar/wakiru",                   pvc: "pr-pilot-workspace" }
+      - { src: "/home/omar/omarmassfih-ws",           pvc: "pr-pilot-omarmassfih-workspace" }
+  tasks:
+    - name: Apply PVCs only (so backing dirs exist before pods)
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        src: "{{ item }}"
+      loop: "{{ lookup('ansible.builtin.fileglob', playbook_dir + '/../../k8s/apps/*/pvc.yaml', wantlist=True) }}"
+
+    - name: Resolve local-path host dir for each PVC
+      ansible.builtin.shell: |
+        vol=$(kubectl --kubeconfig {{ kubeconfig }} -n {{ k3s_namespace }} get pvc {{ item.pvc }} -o jsonpath='{.spec.volumeName}')
+        [ -n "$vol" ] && kubectl --kubeconfig {{ kubeconfig }} get pv "$vol" -o jsonpath='{.spec.local.path}'
+      loop: "{{ migrations }}"
+      register: pvc_paths
+      changed_when: false
+
+    # NOTE: local-path provisions a PV lazily on first pod bind. If the path is
+    # empty here, run 50-apps first (pods create the dirs), scale to 0, migrate,
+    # then scale up — see README "Data migration". Copy is guarded on emptiness.
+    - name: Copy live data into PVC dir (only if PVC dir is empty)
+      ansible.builtin.shell: |
+        dest="{{ item.stdout }}"
+        src="{{ item.item.src }}"
+        if [ -z "$dest" ] || [ ! -d "$dest" ]; then echo "SKIP-no-pv"; exit 0; fi
+        if [ -n "$(ls -A "$dest" 2>/dev/null)" ]; then echo "SKIP-nonempty"; exit 0; fi
+        if [ ! -e "$src" ]; then echo "SKIP-no-src"; exit 0; fi
+        cp -a "$src/." "$dest/"
+        echo "COPIED"
+      loop: "{{ pvc_paths.results }}"
+      loop_control:
+        label: "{{ item.item.pvc }}"
+      register: copies
+      changed_when: "'COPIED' in copies.stdout"
+
+    - name: Migration summary
+      ansible.builtin.debug:
+        msg: "{{ item.item.item.pvc }}: {{ item.stdout }}"
+      loop: "{{ copies.results }}"
+      loop_control:
+        label: "{{ item.item.item.pvc }}"

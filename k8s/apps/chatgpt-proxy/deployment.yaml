@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatgpt-proxy
+  labels: { app: chatgpt-proxy }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }   # shares the RWO codex-auth PVC
+  selector:
+    matchLabels: { app: chatgpt-proxy }
+  template:
+    metadata:
+      labels: { app: chatgpt-proxy }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: proxy
+          image: ghcr.io/omar-massfih/chatgpt-proxy:latest
+          # Bind 0.0.0.0 inside the pod (was 127.0.0.1:8765 on the VM); the
+          # Service keeps it cluster-internal. Adjust via the image's own config
+          # if it hardcodes the bind address.
+          env:
+            - { name: HOST, value: "0.0.0.0" }
+            - { name: PORT, value: "8765" }
+            - { name: CODEX_HOME, value: /home/app/.codex }
+          ports:
+            - containerPort: 8765
+          volumeMounts:
+            - { name: codex-auth, mountPath: /home/app/.codex }
+          readinessProbe:
+            httpGet: { path: /v1/models, port: 8765 }
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits: { memory: "512Mi" }
+      volumes:
+        - name: codex-auth
+          persistentVolumeClaim: { claimName: codex-auth }

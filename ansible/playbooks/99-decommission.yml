@@ -1,0 +1,42 @@
+---
+# Run ONLY after every workload is verified healthy in k3s. Stops the old
+# Compose + systemd services. Files are left in place for a rollback window.
+- name: Decommission legacy Compose + systemd services
+  hosts: k3s
+  become: true
+  tags: [decommission, never]   # 'never' => skipped unless explicitly --tags decommission
+  tasks:
+    - name: Get omar uid (for XDG_RUNTIME_DIR)
+      ansible.builtin.command: id -u omar
+      changed_when: false
+      register: omar_uid
+
+    - name: Stop the agentic-assistent Compose stack
+      ansible.builtin.command:
+        cmd: docker compose down
+        chdir: /home/omar/agentic-assistent
+      become_user: omar
+      register: compose_down
+      changed_when: "'Removing' in compose_down.stderr or 'Stopping' in compose_down.stderr"
+      failed_when: false
+
+    - name: Disable + stop legacy systemd --user units
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        scope: user
+        state: stopped
+        enabled: false
+      become_user: omar
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ omar_uid.stdout }}"
+      loop:
+        - chatgpt-proxy.service
+        - chatgpt-browser.service
+        - pr-pilot.service
+        - pr-pilot-omarmassfih.service
+      failed_when: false
+
+    - name: Final docker prune (frees the old agentic image + cache)
+      ansible.builtin.command: docker system prune -af
+      become_user: omar
+      changed_when: false

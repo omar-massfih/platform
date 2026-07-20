@@ -1,0 +1,48 @@
+---
+- name: Check for existing k3s
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_bin
+
+- name: Install k3s (single node, bundled Traefik + local-path kept)
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -s - \
+      --write-kubeconfig-mode 644
+  args:
+    creates: /usr/local/bin/k3s
+  when: not k3s_bin.stat.exists
+
+- name: Ensure k3s service is enabled and started
+  ansible.builtin.systemd_service:
+    name: k3s
+    state: started
+    enabled: true
+
+- name: Wait for the node to be Ready
+  ansible.builtin.command: >
+    k3s kubectl wait --for=condition=Ready node --all --timeout=180s
+  changed_when: false
+  retries: 3
+  delay: 10
+  register: node_ready
+  until: node_ready.rc == 0
+
+- name: Install python kubernetes client (for kubernetes.core modules)
+  ansible.builtin.apt:
+    name: [python3-kubernetes, python3-yaml]
+    state: present
+    update_cache: true
+
+- name: Fetch kubeconfig to the controller
+  ansible.builtin.fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ playbook_dir }}/../kubeconfig"
+    flat: true
+
+- name: Rewrite server URL in fetched kubeconfig to the VPN address
+  delegate_to: localhost
+  become: false
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/../kubeconfig"
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "https://{{ ansible_host }}:6443"

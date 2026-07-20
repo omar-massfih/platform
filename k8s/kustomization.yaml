@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: platform
+
+resources:
+  - platform/namespace.yaml
+  - platform/codex-auth-pvc.yaml
+  - apps/agentic-assistent
+  - apps/chatgpt-proxy
+  - apps/chatgpt-browser
+  - apps/pr-pilot
+  - apps/pr-pilot-omarmassfih
+
+# All app images live under ghcr.io/omar-massfih. Override tags for a pinned
+# deploy with: `kustomize edit set image ghcr.io/omar-massfih/agentic-assistent=...:<sha>`
+images:
+  - name: ghcr.io/omar-massfih/agentic-assistent
+    newTag: latest
+  - name: ghcr.io/omar-massfih/chatgpt-proxy
+    newTag: latest
+  - name: ghcr.io/omar-massfih/chatgpt-browser
+    newTag: latest
+  - name: ghcr.io/omar-massfih/pr-pilot
+    newTag: latest

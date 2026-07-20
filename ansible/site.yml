@@ -1,0 +1,13 @@
+---
+# Full bootstrap + migration, in order. Run stages individually with tags, e.g.:
+#   ansible-playbook site.yml --tags k3s
+#   ansible-playbook site.yml --tags apps
+# Or a single playbook: ansible-playbook playbooks/50-apps.yml
+- import_playbook: playbooks/00-prereqs.yml
+- import_playbook: playbooks/10-k3s.yml
+- import_playbook: playbooks/20-platform.yml
+- import_playbook: playbooks/30-secrets.yml
+- import_playbook: playbooks/40-data-migrate.yml
+- import_playbook: playbooks/50-apps.yml
+# 99-decommission.yml is intentionally NOT part of site.yml — run it by hand
+# only after every workload is verified healthy in k3s.

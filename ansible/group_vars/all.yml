@@ -1,0 +1,31 @@
+---
+# ── Cluster ────────────────────────────────────────────────────────────────
+k3s_version: "v1.31.5+k3s1"        # pin; bump deliberately
+k3s_namespace: platform
+# k3s ships Traefik (ingress) + local-path (storage). We keep both.
+
+# ── Images (ghcr.io) ───────────────────────────────────────────────────────
+ghcr_org: omar-massfih
+image_tag: latest                   # override with a git sha for pinned deploys
+images:
+  agentic_assistent: "ghcr.io/{{ ghcr_org }}/agentic-assistent:{{ image_tag }}"
+  chatgpt_proxy:     "ghcr.io/{{ ghcr_org }}/chatgpt-proxy:{{ image_tag }}"
+  chatgpt_browser:   "ghcr.io/{{ ghcr_org }}/chatgpt-browser:{{ image_tag }}"
+  pr_pilot:          "ghcr.io/{{ ghcr_org }}/pr-pilot:{{ image_tag }}"
+
+# ── Ingress / TLS (only agentic-assistent is public) ───────────────────────
+public_domain: assistant.omarmassfih.no   # confirm before running 20-platform
+letsencrypt_email: massfih@gmail.com
+acme_server: https://acme-v02.api.letsencrypt.org/directory
+# For a dry run against staging, override acme_server with:
+#   https://acme-staging-v02.api.letsencrypt.org/directory
+
+# ── Local files (git-ignored) that feed secrets/PVCs ───────────────────────
+secrets_dir: "{{ playbook_dir }}/../../secrets"
+# kubeconfig fetched by the k3s role, used for controller-side kubectl/kustomize.
+local_kubeconfig: "{{ playbook_dir }}/../kubeconfig"
+ghcr_pat_file: "{{ secrets_dir }}/ghcr.pat"          # PAT with read:packages
+codex_auth_file: "{{ secrets_dir }}/codex-auth.json" # copy of VM ~/.codex/auth.json
+
+# ── Safety threshold for the prune step ────────────────────────────────────
+min_free_gb_after_prune: 15

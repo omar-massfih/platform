@@ -1,0 +1,12 @@
+# ClusterIP only. Reachable at http://chatgpt-browser.platform.svc:8766
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatgpt-browser
+spec:
+  type: ClusterIP
+  selector: { app: chatgpt-browser }
+  ports:
+    - name: http
+      port: 8766
+      targetPort: 8766

@@ -1,0 +1,33 @@
+---
+# Build k8s Secrets from the local git-ignored env files. We run kubectl on the
+# controller against the fetched kubeconfig (ansible/kubeconfig) and use
+# --from-env-file, which parses KEY=VALUE cleanly (no fragile Jinja parsing).
+- name: Create env-file backed Secrets
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl --kubeconfig {{ local_kubeconfig }} -n {{ k3s_namespace }} \
+      create secret generic {{ item.name }} \
+      --from-env-file={{ item.path }} \
+      --dry-run=client -o yaml \
+    | kubectl --kubeconfig {{ local_kubeconfig }} apply -f -
+  loop:
+    - { name: "agentic-assistent",    path: "{{ secrets_dir }}/agentic-assistent.env" }
+    - { name: "pr-pilot",             path: "{{ secrets_dir }}/pr-pilot.env" }
+    - { name: "pr-pilot-omarmassfih", path: "{{ secrets_dir }}/pr-pilot-omarmassfih.env" }
+  loop_control:
+    label: "{{ item.name }}"
+  changed_when: true
+
+- name: Create codex-auth Secret (seed source for the writable PVC)
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl --kubeconfig {{ local_kubeconfig }} -n {{ k3s_namespace }} \
+      create secret generic codex-auth \
+      --from-file=auth.json={{ codex_auth_file }} \
+      --dry-run=client -o yaml \
+    | kubectl --kubeconfig {{ local_kubeconfig }} apply -f -
+  changed_when: true

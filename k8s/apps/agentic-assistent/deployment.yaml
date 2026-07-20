@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentic-assistent
+  labels: { app: agentic-assistent }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }   # RWO volumes: don't run two pods at once
+  selector:
+    matchLabels: { app: agentic-assistent }
+  template:
+    metadata:
+      labels: { app: agentic-assistent }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      securityContext:
+        fsGroup: 1000            # image runs as uid 1000 (assistant); own the PVCs
+      containers:
+        - name: app
+          image: ghcr.io/omar-massfih/agentic-assistent:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - { name: STORAGE_BACKEND, value: postgres }
+            - { name: FASTEMBED_CACHE_PATH, value: /app/models/fastembed }
+            - { name: HOST, value: "0.0.0.0" }   # non-loopback bind requires API_TOKEN
+          envFrom:
+            - secretRef: { name: agentic-assistent }   # API_TOKEN, DATABASE_URL, tokens
+          volumeMounts:
+            - { name: memory, mountPath: /app/memory }
+            - { name: models, mountPath: /app/models }
+            - { name: codex-auth, mountPath: /home/assistant/.codex }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests: { cpu: "250m", memory: "1Gi" }
+            limits: { memory: "4Gi" }   # fastembed model is memory-heavy at load
+      volumes:
+        - name: memory
+          persistentVolumeClaim: { claimName: agentic-memory }
+        - name: models
+          persistentVolumeClaim: { claimName: agentic-models }
+        - name: codex-auth
+          persistentVolumeClaim: { claimName: codex-auth }

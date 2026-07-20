@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pr-pilot-omarmassfih
+  labels: { app: pr-pilot-omarmassfih }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app: pr-pilot-omarmassfih }
+  template:
+    metadata:
+      labels: { app: pr-pilot-omarmassfih }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: pr-pilot
+          image: ghcr.io/omar-massfih/pr-pilot:latest
+          # omarmassfih.no group instance: same image, its own config toml (group
+          # workspace with frontend/ + backend/), own Telegram bot + state.
+          args: ["--config", "pr-pilot-omarmassfih.toml", "telegram"]
+          env:
+            - { name: CHATGPT_PROXY_BASE_URL, value: "http://chatgpt-proxy.platform.svc:8765/v1" }
+            - { name: PR_PILOT_STATE_DIR, value: /home/app/.pr-pilot-omarmassfih }
+          envFrom:
+            - secretRef: { name: pr-pilot-omarmassfih }   # OMARMASSFIH_BOT_TOKEN etc.
+          volumeMounts:
+            - { name: state, mountPath: /home/app/.pr-pilot-omarmassfih }
+            - { name: workspace, mountPath: /home/app/omarmassfih-ws }
+          resources:
+            requests: { cpu: "100m", memory: "512Mi" }
+            limits: { memory: "2Gi" }
+      volumes:
+        - name: state
+          persistentVolumeClaim: { claimName: pr-pilot-omarmassfih-state }
+        - name: workspace
+          persistentVolumeClaim: { claimName: pr-pilot-omarmassfih-workspace }

@@ -1,0 +1,13 @@
+# Real secrets — only *.example and this file are committed under secrets/
+secrets/*.env
+secrets/*.yaml
+!secrets/*.example
+secrets/codex-auth.json
+secrets/*.pat
+
+# Fetched kubeconfig (pulled from the node by the k3s role)
+ansible/kubeconfig
+*.retry
+
+# Editor / OS noise
+.DS_Store

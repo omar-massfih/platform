@@ -1,0 +1,44 @@
+---
+- name: Prereqs — reclaim disk and install packages
+  hosts: k3s
+  become: true
+  tags: [prereqs]
+  tasks:
+    - name: Show disk before prune
+      ansible.builtin.command: df -h /
+      changed_when: false
+      register: df_before
+
+    - name: df before
+      ansible.builtin.debug:
+        var: df_before.stdout_lines
+
+    # ~24 GB of the disk is reclaimable Docker build cache in /var/lib/containerd.
+    # Prune it so k3s + pulled images have room. Harmless if docker is absent.
+    - name: Prune docker build cache and dangling data
+      ansible.builtin.shell: |
+        set -e
+        if command -v docker >/dev/null 2>&1; then
+          docker builder prune -af || true
+          docker system prune -af || true
+        fi
+      become_user: omar
+      register: prune
+      changed_when: "'Total reclaimed space' in prune.stdout"
+
+    - name: Assert enough free space remains
+      ansible.builtin.shell: |
+        df --output=avail -BG / | tail -1 | tr -dc '0-9'
+      changed_when: false
+      register: free_gb
+
+    - name: Fail if free space below threshold
+      ansible.builtin.assert:
+        that: "free_gb.stdout | int >= min_free_gb_after_prune"
+        fail_msg: "Only {{ free_gb.stdout }}GB free; need >= {{ min_free_gb_after_prune }}GB. Free more before installing k3s."
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: [curl, ca-certificates, apparmor, apparmor-utils]
+        state: present
+        update_cache: true

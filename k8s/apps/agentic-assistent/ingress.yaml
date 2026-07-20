@@ -1,0 +1,25 @@
+# Public TLS ingress via Traefik (bundled with k3s) + cert-manager.
+# Host must match group_vars public_domain and have a DNS A record → VM public IP,
+# with ports 80/443 open (ufw + OCI security list) for the HTTP-01 challenge.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agentic-assistent
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: ["assistant.omarmassfih.no"]
+      secretName: agentic-assistent-tls
+  rules:
+    - host: assistant.omarmassfih.no
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: agentic-assistent
+                port: { number: 8000 }

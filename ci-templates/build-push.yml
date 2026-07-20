@@ -1,0 +1,47 @@
+# Drop this into each service repo as .github/workflows/build-push.yml.
+# Builds an arm64 image (the omar node is aarch64) and pushes to ghcr.io.
+# Uses a native arm64 runner to avoid slow QEMU emulation for the heavy ML deps.
+name: build-push
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # CHANGE per repo: agentic-assistent | chatgpt-proxy | chatgpt-browser | pr-pilot
+  IMAGE: ghcr.io/omar-massfih/agentic-assistent
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm    # native arm64; falls back to buildx+QEMU if unavailable
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=sha
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

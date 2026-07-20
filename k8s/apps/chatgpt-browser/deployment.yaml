@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatgpt-browser
+  labels: { app: chatgpt-browser }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app: chatgpt-browser }
+  template:
+    metadata:
+      labels: { app: chatgpt-browser }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: browser
+          image: ghcr.io/omar-massfih/chatgpt-browser:latest
+          # Headless-browser bridge (chatgpt.com web -> OpenAI chat-completions).
+          # Needs a chromium base image (e.g. mcr.microsoft.com/playwright) in its
+          # Dockerfile; give it shared memory so chromium doesn't crash.
+          env:
+            - { name: HOST, value: "0.0.0.0" }
+            - { name: PORT, value: "8766" }
+          ports:
+            - containerPort: 8766
+          volumeMounts:
+            - { name: dshm, mountPath: /dev/shm }
+          resources:
+            requests: { cpu: "100m", memory: "512Mi" }
+            limits: { memory: "1500Mi" }
+      volumes:
+        - name: dshm
+          emptyDir: { medium: Memory, sizeLimit: 256Mi }

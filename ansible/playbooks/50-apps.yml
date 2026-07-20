@@ -1,0 +1,31 @@
+---
+- name: Deploy all workloads
+  hosts: k3s
+  become: true
+  tags: [apps]
+  vars:
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+  roles:
+    # Seeds the writable codex-auth PVC from the codex-auth Secret (once), so
+    # Codex can rotate its refresh token in place.
+    - pvc_seed
+  tasks:
+    - name: Kustomize-build manifests locally and apply
+      # Renders k8s/ with the image tags/domain substituted, then applies. We run
+      # kustomize on the controller and pipe to the node's kubectl via k8s module.
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition: "{{ lookup('kubernetes.core.kustomize', dir=playbook_dir + '/../../k8s') }}"
+
+    - name: Wait for deployments to become available
+      ansible.builtin.command: >
+        kubectl --kubeconfig {{ kubeconfig }} -n {{ k3s_namespace }}
+        rollout status deploy/{{ item }} --timeout=300s
+      loop:
+        - agentic-assistent
+        - chatgpt-proxy
+        - chatgpt-browser
+        - pr-pilot
+        - pr-pilot-omarmassfih
+      changed_when: false

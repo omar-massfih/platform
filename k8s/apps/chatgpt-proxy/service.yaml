@@ -1,0 +1,13 @@
+# ClusterIP only. Reachable in-cluster at http://chatgpt-proxy.platform.svc:8765
+# — this replaces the old 127.0.0.1:8765 loopback that pr-pilot/opencode used.
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatgpt-proxy
+spec:
+  type: ClusterIP
+  selector: { app: chatgpt-proxy }
+  ports:
+    - name: http
+      port: 8765
+      targetPort: 8765

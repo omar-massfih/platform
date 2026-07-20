@@ -1,0 +1,17 @@
+---
+- name: Install cert-manager (CRDs + controller) via official manifest
+  kubernetes.core.k8s:
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    state: present
+    src: https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+    apply: true
+
+- name: Wait for cert-manager webhook to be ready
+  ansible.builtin.command: >
+    kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml -n cert-manager
+    rollout status deploy/cert-manager-webhook --timeout=180s
+  changed_when: false
+  retries: 3
+  delay: 10
+  register: cm_ready
+  until: cm_ready.rc == 0

@@ -1,0 +1,15 @@
+# Writable volume holding Codex's auth.json. Shared (RWO, single node) by
+# agentic-assistent, chatgpt-proxy and chatgpt-browser. Seeded once from the
+# `codex-auth` Secret by the pvc_seed Ansible role — writable so Codex can
+# rotate its refresh token in place.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codex-auth
+  namespace: platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 64Mi

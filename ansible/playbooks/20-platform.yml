@@ -1,0 +1,38 @@
+---
+- name: Platform addons — namespace, cert-manager, ClusterIssuer, ghcr pull secret
+  hosts: k3s
+  become: true
+  tags: [platform]
+  roles:
+    - cert_manager
+    - ghcr_secret
+  tasks:
+    - name: Ensure namespace exists
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ k3s_namespace }}"
+
+    - name: Apply Let's Encrypt ClusterIssuer
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: ClusterIssuer
+          metadata:
+            name: letsencrypt
+          spec:
+            acme:
+              server: "{{ acme_server }}"
+              email: "{{ letsencrypt_email }}"
+              privateKeySecretRef:
+                name: letsencrypt-account-key
+              solvers:
+                - http01:
+                    ingress:
+                      class: traefik
