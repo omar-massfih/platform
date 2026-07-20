@@ -1,0 +1,11 @@
+---
+# Force k3s to regenerate the dynamic API serving cert so new tls-san entries
+# take effect (removing the cached cert + secret, then restarting).
+- name: regenerate k3s serving cert
+  ansible.builtin.shell: |
+    rm -f /var/lib/rancher/k3s/server/tls/dynamic-cert.json
+    if [ -f /etc/rancher/k3s/k3s.yaml ]; then
+      k3s kubectl -n kube-system delete secret k3s-serving --ignore-not-found
+    fi
+    systemctl restart k3s
+  listen: regenerate k3s serving cert

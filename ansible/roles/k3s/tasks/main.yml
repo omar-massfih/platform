@@ -1,4 +1,22 @@
 ---
+- name: Ensure k3s config dir exists
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+
+# Declarative server config. tls-san adds the VPN IP to the API serving cert so
+# `kubectl` from the Mac (via 10.8.0.1) passes TLS verification.
+- name: Write k3s server config
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0644"
+    content: |
+      write-kubeconfig-mode: "644"
+      tls-san:
+        - "{{ ansible_host }}"
+  notify: regenerate k3s serving cert
+
 - name: Check for existing k3s
   ansible.builtin.stat:
     path: /usr/local/bin/k3s
@@ -6,8 +24,7 @@
 
 - name: Install k3s (single node, bundled Traefik + local-path kept)
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -s - \
-      --write-kubeconfig-mode 644
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -
   args:
     creates: /usr/local/bin/k3s
   when: not k3s_bin.stat.exists
@@ -17,6 +34,10 @@
     name: k3s
     state: started
     enabled: true
+
+# Apply any pending cert regeneration before we wait on the API.
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Wait for the node to be Ready
   ansible.builtin.command: >
