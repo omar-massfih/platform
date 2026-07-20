@@ -1,7 +1,25 @@
 ---
 # Durable protection against a full root filesystem taking down sshd/k3s.
-# Layers: (1) journald hard cap, (2) k3s kubelet image GC (default 85/80 — asserted),
-# (3) a systemd timer that prunes images/logs when disk crosses a threshold.
+# Layers: (0) ext4 root-reserved blocks so sshd (root) can ALWAYS log in even at
+# 100% full, (1) journald hard cap, (2) k3s kubelet image GC + nodefs eviction
+# keep k8s from filling the disk, (3) a systemd timer that prunes when disk crosses
+# a threshold.
+
+# (0) The cloud image ships with -m 0 (no root reserve) — the single biggest risk
+# to SSH. Reserve a fixed slice for root only. Idempotent: only sets if smaller.
+- name: Find root filesystem device
+  ansible.builtin.command: findmnt -no SOURCE /
+  changed_when: false
+  register: root_dev
+
+- name: Read current reserved block count
+  ansible.builtin.shell: "tune2fs -l {{ root_dev.stdout }} | awk '/Reserved block count:/{print $4}'"
+  changed_when: false
+  register: cur_reserved
+
+- name: Reserve {{ disk_guard_reserved_blocks | default(393216) }} blocks (~1.5GiB) for root
+  ansible.builtin.command: "tune2fs -r {{ disk_guard_reserved_blocks | default(393216) }} {{ root_dev.stdout }}"
+  when: cur_reserved.stdout | int < (disk_guard_reserved_blocks | default(393216))
 
 - name: Ensure journald drop-in dir exists
   ansible.builtin.file:
