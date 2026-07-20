@@ -23,6 +23,6 @@ images:
   - name: ghcr.io/omar-massfih/chatgpt-proxy
     newTag: "20260720"
   - name: ghcr.io/omar-massfih/chatgpt-browser
-    newTag: "20260720e"
+    newTag: "20260720f"
   - name: ghcr.io/omar-massfih/pr-pilot
     newTag: "20260720"
