@@ -4,7 +4,7 @@ metadata:
   name: chatgpt-browser
   labels: { app: chatgpt-browser }
 spec:
-  replicas: 1
+  replicas: 0   # scaled to zero 2026-07-21: wakiru moved to Azure Foundry, no consumer left
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: chatgpt-browser }
