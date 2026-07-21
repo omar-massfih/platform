@@ -4,7 +4,7 @@ metadata:
   name: pr-pilot-omarmassfih
   labels: { app: pr-pilot-omarmassfih }
 spec:
-  replicas: 0   # scaled to zero 2026-07-21
+  replicas: 1   # on Azure Foundry DeepSeek-V4-Pro (2026-07-21)
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: pr-pilot-omarmassfih }
