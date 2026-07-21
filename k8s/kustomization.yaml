@@ -25,4 +25,4 @@ images:
   - name: ghcr.io/omar-massfih/chatgpt-browser
     newTag: "20260720f"
   - name: ghcr.io/omar-massfih/pr-pilot
-    newTag: "20260720"
+    newTag: "20260721"
