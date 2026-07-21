@@ -28,10 +28,10 @@ spec:
             - { name: STATE, value: /state/chatgpt-state.json }
             # Drive a specific Custom GPT (CHAT_URL reads GIZMO_URL).
             - { name: GIZMO_URL, value: "https://chatgpt.com/g/g-6a5d3210a0988191bd2d01f3df2803af-api" }
-            # Sequential single-worker gap between sends. Raised 20s->40s to slow
-            # new-conversation velocity after hitting ChatGPT's "too many requests"
-            # throttle (modal-conversation-history-rate-limit).
-            - { name: JOB_COOLDOWN_SECONDS, value: "40" }
+            # Sequential single-worker gap between sends. Raised 20s->40s->60s to
+            # slow new-conversation velocity after hitting ChatGPT's "too many
+            # requests" throttle (modal-conversation-history-rate-limit).
+            - { name: JOB_COOLDOWN_SECONDS, value: "60" }
           ports:
             - containerPort: 8766
           volumeMounts:
