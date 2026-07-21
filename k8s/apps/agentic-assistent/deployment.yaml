@@ -32,6 +32,11 @@ spec:
             # The API key lives in the agentic-assistent secret (LLM_API_KEY).
             - { name: LLM_BASE_URL, value: "https://wakiru.services.ai.azure.com/openai/v1" }
             - { name: LLM_MODEL, value: "DeepSeek-V4-Pro" }
+            # User asked to disable quiet hours entirely (2026-07-21) — empty
+            # string disables the 22:00-07:30 default fallback (config.py
+            # quiet_hours_default); no profile note currently states an
+            # override, so this makes in_quiet_hours() always False.
+            - { name: QUIET_HOURS_DEFAULT, value: "" }
           envFrom:
             - secretRef: { name: agentic-assistent }   # API_TOKEN, DATABASE_URL, tokens
           volumeMounts:
