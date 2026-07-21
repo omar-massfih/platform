@@ -4,7 +4,7 @@ metadata:
   name: pr-pilot
   labels: { app: pr-pilot }
 spec:
-  replicas: 1
+  replicas: 0   # scaled to zero 2026-07-21
   strategy: { type: Recreate }   # RWO volumes + single Telegram poller
   selector:
     matchLabels: { app: pr-pilot }

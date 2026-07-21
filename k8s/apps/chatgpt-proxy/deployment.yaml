@@ -4,7 +4,7 @@ metadata:
   name: chatgpt-proxy
   labels: { app: chatgpt-proxy }
 spec:
-  replicas: 1
+  replicas: 0   # scaled to zero 2026-07-21
   strategy: { type: Recreate }   # shares the RWO codex-auth PVC
   selector:
     matchLabels: { app: chatgpt-proxy }
