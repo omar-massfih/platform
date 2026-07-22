@@ -19,7 +19,7 @@ resources:
 # images) to roll out a new version; Flux applies the change.
 images:
   - name: ghcr.io/omar-massfih/agentic-assistent
-    newTag: "sha-727319d"
+    newTag: "sha-75ad730"
   - name: ghcr.io/omar-massfih/chatgpt-proxy
     newTag: "20260720"
   - name: ghcr.io/omar-massfih/chatgpt-browser
