@@ -64,7 +64,7 @@ spec:
             failureThreshold: 3
           resources:
             requests: { cpu: "250m", memory: "1Gi" }
-            limits: { memory: "6Gi" }   # model load (~2GB) + one-time re-embed migration needs headroom above 4Gi
+            limits: { memory: "8Gi" }   # one-time re-embed migration's working set pins >6Gi; steady state is ~2-3Gi. TODO: restore to ~4Gi after migration completes / make reindex memory-bounded
       volumes:
         - name: memory
           persistentVolumeClaim: { claimName: agentic-memory }
