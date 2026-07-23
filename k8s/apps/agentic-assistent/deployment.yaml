@@ -55,7 +55,7 @@ spec:
             failureThreshold: 3
           resources:
             requests: { cpu: "250m", memory: "1Gi" }
-            limits: { memory: "4Gi" }   # fastembed model is memory-heavy at load
+            limits: { memory: "6Gi" }   # model load (~2GB) + one-time re-embed migration needs headroom above 4Gi
       volumes:
         - name: memory
           persistentVolumeClaim: { claimName: agentic-memory }
