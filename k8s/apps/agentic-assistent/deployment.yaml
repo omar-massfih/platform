@@ -43,6 +43,15 @@ spec:
             - { name: memory, mountPath: /app/memory }
             - { name: models, mountPath: /app/models }
             - { name: codex-auth, mountPath: /home/assistant/.codex }
+          # build_agent() runs a synchronous startup reindex before uvicorn binds
+          # the port; a one-time re-embed migration (embedding-model/pooling change)
+          # can take several minutes. The startupProbe gives that window without
+          # letting liveness kill the pod mid-migration (which would restart it from
+          # scratch and never complete). failureThreshold*periodSeconds = 15m.
+          startupProbe:
+            httpGet: { path: /health, port: 8000 }
+            periodSeconds: 15
+            failureThreshold: 60
           readinessProbe:
             httpGet: { path: /health, port: 8000 }
             initialDelaySeconds: 20
