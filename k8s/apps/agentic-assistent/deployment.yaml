@@ -64,7 +64,7 @@ spec:
             failureThreshold: 3
           resources:
             requests: { cpu: "250m", memory: "1Gi" }
-            limits: { memory: "8Gi" }   # one-time re-embed migration's working set pins >6Gi; steady state is ~2-3Gi. TODO: restore to ~4Gi after migration completes / make reindex memory-bounded
+            limits: { memory: "8Gi" }   # The startup re-embed migration (fires on any embedding-model/pooling change) has a ~6Gi working set and even idle sits ~6Gi; it OOMKill-crashlooped at 4Gi and 6Gi. Do NOT lower below ~7Gi or a future model change re-triggers the crashloop. Real fix: make memory/index.reindex batched/memory-bounded, then this can drop.
       volumes:
         - name: memory
           persistentVolumeClaim: { claimName: agentic-memory }
