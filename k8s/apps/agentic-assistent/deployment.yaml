@@ -37,6 +37,16 @@ spec:
             # quiet_hours_default); no profile note currently states an
             # override, so this makes in_quiet_hours() always False.
             - { name: QUIET_HOURS_DEFAULT, value: "" }
+            # New capability areas (2026-07-23), all opt-in — enabled on request.
+            # Reminders are already on by default, so birthday + subscription-
+            # renewal reminders fire through the existing channels.
+            - { name: ENABLE_PEOPLE, value: "true" }
+            - { name: ENABLE_READING, value: "true" }
+            - { name: ENABLE_SUBSCRIPTIONS, value: "true" }
+            - { name: ENABLE_HABITS, value: "true" }
+            - { name: ENABLE_WEATHER, value: "true" }
+            # Geocoded to coordinates on first fetch; change if not Oslo.
+            - { name: WEATHER_LOCATION_NAME, value: "Oslo" }
           envFrom:
             - secretRef: { name: agentic-assistent }   # API_TOKEN, DATABASE_URL, tokens
           volumeMounts:
