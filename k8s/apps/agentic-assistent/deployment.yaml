@@ -25,7 +25,11 @@ spec:
           env:
             - { name: STORAGE_BACKEND, value: postgres }
             - { name: FASTEMBED_CACHE_PATH, value: /app/models/fastembed }
-            - { name: HOST, value: "0.0.0.0" }   # non-loopback bind requires API_TOKEN
+            # The daemon is the single entry point: reminders, digests, and data
+            # refreshes all ride the heartbeat, so it must be on for the process
+            # to do anything proactive. Set here (overrides the secret) so a stale
+            # ENABLE_HEARTBEAT can't leave the daemon inert.
+            - { name: ENABLE_HEARTBEAT, value: "true" }
             # LLM backend is Azure AI Foundry's OpenAI-compatible v1 surface
             # (model DeepSeek-V4-Pro), driven by the openai provider. Overrides
             # the secret's LLM_BASE_URL/LLM_MODEL (was the chatgpt-browser bridge).
@@ -48,16 +52,16 @@ spec:
             # Geocoded to coordinates on first fetch; change if not Oslo.
             - { name: WEATHER_LOCATION_NAME, value: "Oslo" }
           envFrom:
-            - secretRef: { name: agentic-assistent }   # API_TOKEN, DATABASE_URL, tokens
+            - secretRef: { name: agentic-assistent }   # DATABASE_URL, TELEGRAM_BOT_TOKEN, LLM_API_KEY, …
           volumeMounts:
             - { name: memory, mountPath: /app/memory }
             - { name: models, mountPath: /app/models }
             - { name: codex-auth, mountPath: /home/assistant/.codex }
-          # build_agent() runs a synchronous startup reindex before uvicorn binds
-          # the port; a one-time re-embed migration (embedding-model/pooling change)
-          # can take several minutes. The startupProbe gives that window without
-          # letting liveness kill the pod mid-migration (which would restart it from
-          # scratch and never complete). failureThreshold*periodSeconds = 15m.
+          # build_agent() runs a synchronous startup reindex before the daemon
+          # serves /health; a one-time re-embed migration (embedding-model/pooling
+          # change) can take several minutes. The startupProbe gives that window
+          # without letting liveness kill the pod mid-migration (which would restart
+          # it from scratch and never complete). failureThreshold*periodSeconds = 15m.
           startupProbe:
             httpGet: { path: /health, port: 8000 }
             periodSeconds: 15
