@@ -30,6 +30,9 @@ spec:
             # adding DRIVE_OAUTH_* to the secret and DRIVE_BACKUP_ENABLED here.
             - { name: STORAGE_BACKEND, value: local }
             - { name: FASTEMBED_CACHE_PATH, value: /app/models/fastembed }
+            # Keep startup reindex inside the VM memory budget after the Neon
+            # reverse import expanded the local note set.
+            - { name: EMBEDDING_MODEL, value: "BAAI/bge-small-en-v1.5" }
             # One-way backup of the SQLite memory dir to Google Drive. Creds
             # (DRIVE_OAUTH_*) live in the agentic-assistent secret.
             - { name: DRIVE_BACKUP_ENABLED, value: "true" }
