@@ -30,6 +30,9 @@ spec:
             # adding DRIVE_OAUTH_* to the secret and DRIVE_BACKUP_ENABLED here.
             - { name: STORAGE_BACKEND, value: local }
             - { name: FASTEMBED_CACHE_PATH, value: /app/models/fastembed }
+            # One-way backup of the SQLite memory dir to Google Drive. Creds
+            # (DRIVE_OAUTH_*) live in the agentic-assistent secret.
+            - { name: DRIVE_BACKUP_ENABLED, value: "true" }
             # The daemon is the single entry point: reminders, digests, and data
             # refreshes all ride the heartbeat, so it must be on for the process
             # to do anything proactive. Set here (overrides the secret) so a stale
