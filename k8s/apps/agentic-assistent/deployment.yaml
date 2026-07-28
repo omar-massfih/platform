@@ -23,7 +23,12 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - { name: STORAGE_BACKEND, value: postgres }
+            # Local SQLite backend (memory PVC below). Neon was retired after it
+            # blew its compute-time quota; DATABASE_URL in the secret is now dead
+            # (postgres_backend() returns None on local, so it's never read).
+            # Durability comes from the one-way Google Drive backup — enable it by
+            # adding DRIVE_OAUTH_* to the secret and DRIVE_BACKUP_ENABLED here.
+            - { name: STORAGE_BACKEND, value: local }
             - { name: FASTEMBED_CACHE_PATH, value: /app/models/fastembed }
             # The daemon is the single entry point: reminders, digests, and data
             # refreshes all ride the heartbeat, so it must be on for the process
