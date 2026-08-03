@@ -1,0 +1,6 @@
+---
+# CloudNativePG operator. Pin; bump deliberately (check release notes for CRD
+# changes before a major/minor bump). On a minor bump also update the
+# `release-1.NN` branch segment in cnpg_manifest.
+cnpg_version: "1.30.0"
+cnpg_manifest: "https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.30/releases/cnpg-{{ cnpg_version }}.yaml"

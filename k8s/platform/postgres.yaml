@@ -1,0 +1,41 @@
+# CloudNativePG Postgres for the ingest / dlt data platform.
+#
+# The operator (CRDs + controller in namespace cnpg-system) is installed
+# out-of-band by the Ansible `cnpg_operator` role in 20-platform. This manifest
+# only declares the database, and Flux reconciles it. On a fresh cluster it will
+# error until the operator's CRDs exist — Flux retries, so it self-heals once
+# 20-platform has run (same pattern as the cert-manager ClusterIssuer).
+#
+# CNPG auto-creates the app credentials in Secret `pg-app` (keys: username,
+# password, dbname, host, port, uri, jdbc-uri). Nothing sensitive is committed.
+# In-cluster read/write endpoint: pg-rw.platform.svc.cluster.local:5432
+# (pg-ro / pg-r exist too for read-only / any-instance reads.)
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg
+spec:
+  instances: 1                       # single-node k3s — one instance, no HA
+  primaryUpdateStrategy: unsupervised # image omitted → operator's default Postgres major
+
+  storage:
+    size: 5Gi
+    storageClass: local-path         # k3s default provisioner (RWO, node-local)
+
+  # Kept deliberately light for the shared VM. shared_buffers ~25% of the limit.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: "100"
+
+  bootstrap:
+    initdb:
+      database: ingest
+      owner: ingest

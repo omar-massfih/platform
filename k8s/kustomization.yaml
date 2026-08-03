@@ -9,6 +9,7 @@ namespace: platform
 resources:
   - platform/namespace.yaml
   - platform/codex-auth-pvc.yaml
+  - platform/postgres.yaml            # CNPG Cluster; operator installed by 20-platform
   - apps/agentic-assistent
   - apps/chatgpt-proxy
   - apps/chatgpt-browser

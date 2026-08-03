@@ -1,10 +1,11 @@
 ---
-- name: Platform addons — namespace, cert-manager, ClusterIssuer, ghcr pull secret
+- name: Platform addons — namespace, cert-manager, CNPG operator, ClusterIssuer, ghcr pull secret
   hosts: k3s
   become: true
   tags: [platform]
   roles:
     - cert_manager
+    - cnpg_operator
     - ghcr_secret
   tasks:
     - name: Ensure namespace exists

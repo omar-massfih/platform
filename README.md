@@ -13,16 +13,18 @@ Compose / systemd into Kubernetes.
 | chatgpt-browser | ClusterIP `chatgpt-browser.platform.svc:8766` | Headless-browser → OpenAI bridge (chromium). |
 | pr-pilot | none (outbound Telegram + git) | Ships features to wakiru. State + workspace PVCs. |
 | pr-pilot-omarmassfih | none | Same image, omarmassfih.no group config. |
+| postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
 
-All five run in namespace `platform`. Only agentic-assistent has an inbound HTTP
-API, so it's the only one with a public ingress. The proxy, browser and both
-pr-pilot bots stay cluster-internal.
+All five apps run in namespace `platform`. Only agentic-assistent has an inbound
+HTTP API, so it's the only one with a public ingress. The proxy, browser and both
+pr-pilot bots stay cluster-internal. Postgres is a cluster-internal data store
+(CloudNativePG); its operator lives in `cnpg-system`, the DB itself in `platform`.
 
 ## Layout
 
 ```
 ansible/    inventory, group_vars, site.yml, playbooks 00–99, roles
-k8s/        kustomize: platform/ (ns, codex-auth PVC) + apps/<svc>/
+k8s/        kustomize: platform/ (ns, codex-auth PVC, CNPG postgres) + apps/<svc>/
 ci-templates/build-push.yml   arm64 → ghcr workflow to drop into each service repo
 dockerfiles/                  reference Dockerfiles for services that lack one
 scripts/push-from-vm.sh       build+push from the arm64 VM (no-GitHub services)

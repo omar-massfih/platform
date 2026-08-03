@@ -1,0 +1,25 @@
+---
+# Cluster-wide operator (CRDs + controller in namespace cnpg-system). The actual
+# database is declared as a CNPG `Cluster` in k8s/platform/postgres.yaml and
+# reconciled by Flux — this role only installs the controller that watches it.
+- name: Install CloudNativePG operator via official manifest
+  kubernetes.core.k8s:
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    state: present
+    src: "{{ cnpg_manifest }}"
+    apply: true
+    # CNPG CRDs are large — server-side apply avoids the client-side
+    # last-applied-configuration annotation size limit.
+    server_side_apply:
+      field_manager: ansible
+      force_conflicts: true
+
+- name: Wait for CloudNativePG controller to be ready
+  ansible.builtin.command: >
+    kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml -n cnpg-system
+    rollout status deploy/cnpg-controller-manager --timeout=180s
+  changed_when: false
+  retries: 3
+  delay: 10
+  register: cnpg_ready
+  until: cnpg_ready.rc == 0
