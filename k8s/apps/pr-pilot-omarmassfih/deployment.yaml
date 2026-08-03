@@ -33,8 +33,8 @@ spec:
             - { name: config, mountPath: /home/omar/pr-pilot-omarmassfih.toml, subPath: pr-pilot-omarmassfih.toml }
             - { name: config, mountPath: /home/omar/.config/opencode/opencode.json, subPath: opencode.json }
           resources:
-            requests: { cpu: "100m", memory: "512Mi" }
-            limits: { memory: "2Gi" }
+            requests: { cpu: "100m", memory: "1Gi" }
+            limits: { memory: "6Gi" }   # A codex build peaks ~4.3Gi (agent + the [memory] embedding model loaded during planning); it OOMKill-crashlooped at 2Gi, freezing Telegram mid-"Planning…". Keep >=5Gi.
       volumes:
         - name: state
           persistentVolumeClaim: { claimName: pr-pilot-omarmassfih-state }
