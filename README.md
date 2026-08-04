@@ -14,6 +14,7 @@ Compose / systemd into Kubernetes.
 | pr-pilot | none (outbound Telegram + git) | Ships features to wakiru. State + workspace PVCs. |
 | pr-pilot-omarmassfih | none | Same image, omarmassfih.no group config. |
 | postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
+| ingest | none (CronJob) | dlt pipeline from the `ingest` repo → Postgres. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
 
 All five apps run in namespace `platform`. Only agentic-assistent has an inbound
 HTTP API, so it's the only one with a public ingress. The proxy, browser and both
@@ -42,6 +43,9 @@ secrets/                      git-ignored env/creds + *.example templates
    `pr-pilot` repos (edit `IMAGE` per repo). For `chatgpt-proxy` / `chatgpt-browser`
    (no GitHub remote) either create repos or build from the VM:
    `./scripts/push-from-vm.sh chatgpt-proxy '~/chatgpt-openai-proxy' dockerfiles/chatgpt-proxy.Dockerfile`
+   The **ingest** repo already carries its own `build-push.yml` (arm64 → ghcr) that
+   also bumps the `ingest` image pin here on each push — it needs a `PLATFORM_PAT`
+   secret (contents:write on this repo). Nothing to add on this side.
 4. **DNS + firewall (for public TLS):** A record `assistant.omarmassfih.no` → VM public
    IP, and open **80/443** in ufw **and** the OCI security list (needed for the
    Let's Encrypt HTTP-01 challenge).

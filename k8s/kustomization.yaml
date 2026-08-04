@@ -15,6 +15,8 @@ resources:
   - apps/chatgpt-browser
   - apps/pr-pilot
   - apps/pr-pilot-omarmassfih
+  - apps/ingest                       # dlt pipeline (CronJob); tag bumped by the
+  #                                     ingest repo's build-push CI on each push.
 
 # All images pulled from ghcr, pinned to a build tag. Bump these (and push new
 # images) to roll out a new version; Flux applies the change.
@@ -27,3 +29,5 @@ images:
     newTag: "20260720f"
   - name: ghcr.io/omar-massfih/pr-pilot
     newTag: "20260730d"
+  - name: ghcr.io/omar-massfih/ingest
+    newTag: "latest"                  # bumped to a sha- tag by ingest CI on first push
