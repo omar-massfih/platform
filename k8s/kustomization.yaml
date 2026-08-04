@@ -1,23 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: platform
-
 # Reconciled by Flux (clusters/omar/flux-system). Only components with a published
 # image are enabled. Uncomment each app as its image lands in ghcr (or is imported
 # into containerd), then commit — Flux applies it automatically.
 resources:
   - platform/namespace.yaml
   - platform/codex-auth-pvc.yaml
-  - platform/postgres.yaml            # CNPG Cluster; operator installed by 20-platform
+  - platform/postgres.yaml # CNPG Cluster; operator installed by 20-platform
   - apps/agentic-assistent
   - apps/chatgpt-proxy
   - apps/chatgpt-browser
   - apps/pr-pilot
   - apps/pr-pilot-omarmassfih
-  - apps/ingest                       # dlt pipeline (CronJob); tag bumped by the
+  - apps/ingest # dlt pipeline (CronJob); tag bumped by the
   #                                     ingest repo's build-push CI on each push.
-
 # All images pulled from ghcr, pinned to a build tag. Bump these (and push new
 # images) to roll out a new version; Flux applies the change.
 images:
@@ -30,4 +27,4 @@ images:
   - name: ghcr.io/omar-massfih/pr-pilot
     newTag: "20260730d"
   - name: ghcr.io/omar-massfih/ingest
-    newTag: "latest"                  # bumped to a sha- tag by ingest CI on first push
+    newTag: "sha-1a45a41" # bumped to a sha- tag by ingest CI on first push
