@@ -13,8 +13,7 @@ resources:
   - apps/chatgpt-browser
   - apps/pr-pilot
   - apps/pr-pilot-omarmassfih
-  - apps/ingest # dlt pipeline (CronJob); tag bumped by the
-  #                                     ingest repo's build-push CI on each push.
+  - apps/ingest # dlt orchestrator (Deployment); tag bumped by ingest CI
 # All images pulled from ghcr, pinned to a build tag. Bump these (and push new
 # images) to roll out a new version; Flux applies the change.
 images:

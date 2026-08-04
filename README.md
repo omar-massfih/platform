@@ -14,7 +14,7 @@ Compose / systemd into Kubernetes.
 | pr-pilot | none (outbound Telegram + git) | Ships features to wakiru. State + workspace PVCs. |
 | pr-pilot-omarmassfih | none | Same image, omarmassfih.no group config. |
 | postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
-| ingest | none (CronJob) | dlt pipeline from the `ingest` repo → Postgres. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
+| ingest | none (Deployment) | dlt orchestrator from the `ingest` repo → Postgres; schedules live in its source YAMLs. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
 
 All five apps run in namespace `platform`. Only agentic-assistent has an inbound
 HTTP API, so it's the only one with a public ingress. The proxy, browser and both

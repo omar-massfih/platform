@@ -1,0 +1,39 @@
+# Long-running orchestrator from the `ingest` repo: one process that fires each
+# sources/*.yaml on its own cron `schedule`. Scheduling lives in the source YAMLs,
+# not here. Uses the image's default CMD (python orchestrator.py). Credentials are
+# injected from the CNPG `pg-app` Secret; the ingest code stays platform-agnostic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingest
+  labels: { app: ingest }
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate                  # single scheduler — never run two (double-fires)
+  selector:
+    matchLabels: { app: ingest }
+  template:
+    metadata:
+      labels: { app: ingest }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: ingest
+          image: ghcr.io/omar-massfih/ingest
+          imagePullPolicy: Always
+          env:
+            - name: DLT_DESTINATION
+              value: postgres
+            - name: DESTINATION__POSTGRES__CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: pg-app        # CNPG-generated app creds
+                  key: uri
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
