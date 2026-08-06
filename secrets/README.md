@@ -9,6 +9,7 @@ Real secret material lives here at bootstrap time but is **git-ignored** — onl
 | `agentic-assistent.env`         | Secret `agentic-assistent` (API_TOKEN, DATABASE_URL, tokens) |
 | `pr-pilot.env`                  | Secret `pr-pilot`                                   |
 | `pr-pilot-omarmassfih.env`      | Secret `pr-pilot-omarmassfih`                       |
+| `garage-s3.env`                 | Secret `garage-s3` (Garage rpc_secret + default S3 key; read by garage & ingest) |
 | `codex-auth.json`               | Secret `codex-auth` → seeded into the writable `codex-auth` PVC |
 | `ghcr.pat`                      | Secret `ghcr` (dockerconfigjson imagePullSecret)    |
 

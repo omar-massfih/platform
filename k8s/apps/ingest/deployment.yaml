@@ -1,7 +1,12 @@
 # Long-running orchestrator from the `ingest` repo: one process that fires each
-# sources/*.yaml on its own cron `schedule`. Scheduling lives in the source YAMLs,
-# not here. Uses the image's default CMD (python orchestrator.py). Credentials are
-# injected from the CNPG `pg-app` Secret; the ingest code stays platform-agnostic.
+# pipeline in sources/*.yaml on its own cron `schedule`. Scheduling lives in the
+# source YAMLs, not here. Uses the image's default CMD (python orchestrator.py).
+# Credentials are injected from Secrets; the ingest code stays platform-agnostic.
+#
+# No blanket DLT_DESTINATION override here (deliberately) — sources/weather.yaml
+# now has pipelines on two different destinations (postgres and filesystem), and
+# a global override would force both onto one, silently breaking the other. Each
+# pipeline's own `destination:` field in its YAML is authoritative.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,13 +29,41 @@ spec:
           image: ghcr.io/omar-massfih/ingest
           imagePullPolicy: Always
           env:
-            - name: DLT_DESTINATION
-              value: postgres
             - name: DESTINATION__POSTGRES__CREDENTIALS
               valueFrom:
                 secretKeyRef:
                   name: pg-app        # CNPG-generated app creds
                   key: uri
+            # weather_landing writes here (DESTINATION__), weather_raw reads it
+            # back (SOURCES__) — two separate dlt config namespaces, same bucket.
+            - name: DESTINATION__FILESYSTEM__BUCKET_URL
+              value: s3://ingest-landing
+            - name: DESTINATION__FILESYSTEM__CREDENTIALS__ENDPOINT_URL
+              value: http://garage.platform.svc.cluster.local:3900
+            - name: DESTINATION__FILESYSTEM__CREDENTIALS__AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_DEFAULT_ACCESS_KEY
+            - name: DESTINATION__FILESYSTEM__CREDENTIALS__AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_DEFAULT_SECRET_KEY
+            - name: SOURCES__FILESYSTEM__BUCKET_URL
+              value: s3://ingest-landing
+            - name: SOURCES__FILESYSTEM__CREDENTIALS__ENDPOINT_URL
+              value: http://garage.platform.svc.cluster.local:3900
+            - name: SOURCES__FILESYSTEM__CREDENTIALS__AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_DEFAULT_ACCESS_KEY
+            - name: SOURCES__FILESYSTEM__CREDENTIALS__AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_DEFAULT_SECRET_KEY
           resources:
             requests:
               cpu: 50m

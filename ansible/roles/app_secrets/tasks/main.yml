@@ -16,6 +16,7 @@
     - { name: "agentic-assistent",    path: "{{ secrets_dir }}/agentic-assistent.env" }
     - { name: "pr-pilot",             path: "{{ secrets_dir }}/pr-pilot.env" }
     - { name: "pr-pilot-omarmassfih", path: "{{ secrets_dir }}/pr-pilot-omarmassfih.env" }
+    - { name: "garage-s3",            path: "{{ secrets_dir }}/garage-s3.env" }
   loop_control:
     label: "{{ item.name }}"
   changed_when: true

@@ -1,0 +1,61 @@
+# S3-compatible object storage (Garage — https://garagehq.deuxfleurs.fr/) used as
+# the landing zone for ingest's weather_landing/weather_raw pipelines. Single-node,
+# no HA (matches the single-node k3s VM). --single-node --default-bucket makes
+# Garage auto-provision the default access key and bucket from env on first boot —
+# no manual `garage bucket create`/`garage key create` bootstrap step needed.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garage
+  labels: { app: garage }
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # local-path PVC is node-local/RWO — no rolling update anyway
+  selector:
+    matchLabels: { app: garage }
+  template:
+    metadata:
+      labels: { app: garage }
+    spec:
+      containers:
+        - name: garage
+          image: dxflrs/garage:v2.3.0
+          args: ["server", "--single-node", "--default-bucket"]
+          env:
+            - name: GARAGE_DEFAULT_BUCKET
+              value: ingest-landing
+            - name: GARAGE_RPC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_RPC_SECRET
+            - name: GARAGE_DEFAULT_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_DEFAULT_ACCESS_KEY
+            - name: GARAGE_DEFAULT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: garage-s3
+                  key: GARAGE_DEFAULT_SECRET_KEY
+          volumeMounts:
+            - name: config
+              mountPath: /etc/garage.toml
+              subPath: garage.toml
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: config
+          configMap:
+            name: garage-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: garage-data

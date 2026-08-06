@@ -1,0 +1,21 @@
+# Single-node config (replication_factor = 1 — no HA, matches the single-node k3s
+# VM). No secret material here by design: rpc_secret and the default S3 key/bucket
+# are supplied via env vars from Secret `garage-s3` (see deployment.yaml) instead
+# of being baked into this file, so nothing sensitive is committed to git.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: garage-config
+data:
+  garage.toml: |
+    metadata_dir = "/data/meta"
+    data_dir = "/data/data"
+    db_engine = "lmdb"
+    replication_factor = 1
+
+    rpc_bind_addr = "[::]:3901"
+    rpc_public_addr = "127.0.0.1:3901"
+
+    [s3_api]
+    s3_region = "garage"
+    api_bind_addr = "[::]:3900"
