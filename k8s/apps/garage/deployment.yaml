@@ -21,6 +21,7 @@ spec:
       containers:
         - name: garage
           image: dxflrs/garage:v2.3.0
+          command: ["/garage"] # image entrypoint isn't the binary; invoke it explicitly
           args: ["server", "--single-node", "--default-bucket"]
           env:
             - name: GARAGE_DEFAULT_BUCKET
