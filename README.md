@@ -15,7 +15,7 @@ Compose / systemd into Kubernetes.
 | pr-pilot-omarmassfih | none | Same image, omarmassfih.no group config. |
 | postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
 | ingest | none (Deployment) | dlt orchestrator from the `ingest` repo → Postgres; schedules live in its source YAMLs. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
-| omarmassfih-backend | **public** `https://backend.omarmassfih.no` (Traefik + TLS) | Notes and chat API. Authored notes are seeded into cluster-local Postgres by an init container; embeddings refresh hourly. |
+| omarmassfih-backend | **public** `https://backend.omarmassfih.no` (Traefik + TLS) | Notes and chat API. Authored notes and local FastEmbed vectors are synchronized into cluster-local Postgres before rollout; embeddings refresh hourly without Vercel. |
 
 All apps run in namespace `platform`. Agentic-assistent and omarmassfih-backend
 have public HTTP APIs. The proxy, browser and both pr-pilot bots stay

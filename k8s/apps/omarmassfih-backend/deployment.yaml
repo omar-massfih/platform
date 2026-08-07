@@ -24,6 +24,19 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef: { name: pg-app, key: uri }
+        # Build the local 384-dimensional search index before exposing a new
+        # revision. The ONNX model is baked into the backend image.
+        - name: embed-notes
+          image: ghcr.io/omar-massfih/omarmassfih.no-backend
+          imagePullPolicy: Always
+          command: ["python", "scripts/embed_notes.py"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: uri }
+          resources:
+            requests: { cpu: 200m, memory: 256Mi }
+            limits: { memory: 1Gi }
       containers:
         - name: api
           image: ghcr.io/omar-massfih/omarmassfih.no-backend
@@ -53,5 +66,5 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
           resources:
-            requests: { cpu: 50m, memory: 128Mi }
-            limits: { memory: 512Mi }
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
