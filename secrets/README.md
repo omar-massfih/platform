@@ -11,6 +11,7 @@ Real secret material lives here at bootstrap time but is **git-ignored** — onl
 | `pr-pilot-omarmassfih.env`      | Secret `pr-pilot-omarmassfih`                       |
 | `garage-s3.env`                 | Secret `garage-s3` (Garage rpc_secret + default S3 key; read by garage & ingest) |
 | `frost.env`                     | Secret `frost` (met.no Frost API client id/secret; read by ingest) |
+| `omarmassfih-backend.env`       | Optional Secret `omarmassfih-backend` (AI Gateway; notes still work without it) |
 | `codex-auth.json`               | Secret `codex-auth` → seeded into the writable `codex-auth` PVC |
 | `ghcr.pat`                      | Secret `ghcr` (dockerconfigjson imagePullSecret)    |
 

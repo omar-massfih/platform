@@ -22,6 +22,26 @@
     label: "{{ item.name }}"
   changed_when: true
 
+- name: Check for optional omarmassfih backend credentials
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "{{ secrets_dir }}/omarmassfih-backend.env"
+  register: omarmassfih_backend_secret_file
+
+- name: Create optional omarmassfih backend Secret
+  when: omarmassfih_backend_secret_file.stat.exists
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl --kubeconfig {{ local_kubeconfig }} -n {{ k3s_namespace }} \
+      create secret generic omarmassfih-backend \
+      --from-env-file={{ secrets_dir }}/omarmassfih-backend.env \
+      --dry-run=client -o yaml \
+    | kubectl --kubeconfig {{ local_kubeconfig }} apply -f -
+  changed_when: true
+
 - name: Create codex-auth Secret (seed source for the writable PVC)
   delegate_to: localhost
   become: false

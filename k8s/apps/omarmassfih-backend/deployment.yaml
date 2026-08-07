@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omarmassfih-backend
+  labels: { app: omarmassfih-backend }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: omarmassfih-backend }
+  template:
+    metadata:
+      labels: { app: omarmassfih-backend }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      initContainers:
+        # The authored notes ship in the image. Synchronize them into Postgres
+        # before this revision can become Ready.
+        - name: seed-notes
+          image: ghcr.io/omar-massfih/omarmassfih.no-backend
+          imagePullPolicy: Always
+          command: ["python", "scripts/seed_notes.py"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: uri }
+      containers:
+        - name: api
+          image: ghcr.io/omar-massfih/omarmassfih.no-backend
+          imagePullPolicy: Always
+          ports:
+            - { name: http, containerPort: 8000 }
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: uri }
+            - name: AI_GATEWAY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: omarmassfih-backend
+                  key: AI_GATEWAY_API_KEY
+                  optional: true
+          startupProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet: { path: /db-health, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 512Mi }

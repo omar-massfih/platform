@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: omarmassfih-backend-embed
+spec:
+  schedule: "17 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: ghcr
+          containers:
+            - name: embed-notes
+              image: ghcr.io/omar-massfih/omarmassfih.no-backend
+              imagePullPolicy: Always
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  if [ -z "$AI_GATEWAY_API_KEY" ]; then
+                    echo "AI_GATEWAY_API_KEY is not configured; skipping embeddings"
+                    exit 0
+                  fi
+                  python scripts/embed_notes.py
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef: { name: pg-app, key: uri }
+                - name: AI_GATEWAY_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: omarmassfih-backend
+                      key: AI_GATEWAY_API_KEY
+                      optional: true

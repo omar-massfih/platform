@@ -15,11 +15,12 @@ Compose / systemd into Kubernetes.
 | pr-pilot-omarmassfih | none | Same image, omarmassfih.no group config. |
 | postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
 | ingest | none (Deployment) | dlt orchestrator from the `ingest` repo → Postgres; schedules live in its source YAMLs. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
+| omarmassfih-backend | **public** `https://backend.omarmassfih.no` (Traefik + TLS) | Notes and chat API. Authored notes are seeded into cluster-local Postgres by an init container; embeddings refresh hourly. |
 
-All five apps run in namespace `platform`. Only agentic-assistent has an inbound
-HTTP API, so it's the only one with a public ingress. The proxy, browser and both
-pr-pilot bots stay cluster-internal. Postgres is a cluster-internal data store
-(CloudNativePG); its operator lives in `cnpg-system`, the DB itself in `platform`.
+All apps run in namespace `platform`. Agentic-assistent and omarmassfih-backend
+have public HTTP APIs. The proxy, browser and both pr-pilot bots stay
+cluster-internal. Postgres is a cluster-internal data store (CloudNativePG); its
+operator lives in `cnpg-system`, the DB itself in `platform`.
 
 ## Layout
 
@@ -46,9 +47,9 @@ secrets/                      git-ignored env/creds + *.example templates
    The **ingest** repo already carries its own `build-push.yml` (arm64 → ghcr) that
    also bumps the `ingest` image pin here on each push — it needs a `PLATFORM_PAT`
    secret (contents:write on this repo). Nothing to add on this side.
-4. **DNS + firewall (for public TLS):** A record `assistant.omarmassfih.no` → VM public
-   IP, and open **80/443** in ufw **and** the OCI security list (needed for the
-   Let's Encrypt HTTP-01 challenge).
+4. **DNS + firewall (for public TLS):** A records for `assistant.omarmassfih.no`
+   and `backend.omarmassfih.no` → VM public IP, and open **80/443** in ufw **and**
+   the OCI security list (needed for the Let's Encrypt HTTP-01 challenge).
 
 ## Bootstrap
 
@@ -85,6 +86,7 @@ export KUBECONFIG=ansible/kubeconfig
 kubectl get nodes                                   # Ready
 kubectl -n platform get pods                        # all Running/Ready
 curl https://assistant.omarmassfih.no/health        # 200, valid LE cert
+curl https://backend.omarmassfih.no/db-health       # 200, cluster-local Postgres
 kubectl -n platform exec deploy/pr-pilot -- \
   curl -s http://chatgpt-proxy.platform.svc:8765/v1/models   # 200 in-cluster
 ```
