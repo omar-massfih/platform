@@ -30,4 +30,4 @@ images:
   - name: ghcr.io/omar-massfih/ingest
     newTag: "sha-18527d6" # bumped to a sha- tag by ingest CI on first push
   - name: ghcr.io/omar-massfih/omarmassfih.no-backend
-    newTag: "sha-949a953"
+    newTag: "sha-2a9e68e"
