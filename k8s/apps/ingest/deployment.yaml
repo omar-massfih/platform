@@ -34,6 +34,16 @@ spec:
                 secretKeyRef:
                   name: pg-app        # CNPG-generated app creds
                   key: uri
+            # Frost API http_basic auth: client id = username, empty password.
+            # dlt resolves the bare CREDENTIALS__* section for rest_api sources;
+            # destination creds above are more specific and take precedence.
+            - name: CREDENTIALS__USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: frost
+                  key: FROST_CLIENT_ID
+            - name: CREDENTIALS__PASSWORD
+              value: ""
             # weather_landing writes here (DESTINATION__), weather_raw reads it
             # back (SOURCES__) — two separate dlt config namespaces, same bucket.
             - name: DESTINATION__FILESYSTEM__BUCKET_URL
