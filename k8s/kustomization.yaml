@@ -28,6 +28,6 @@ images:
   - name: ghcr.io/omar-massfih/pr-pilot
     newTag: "20260730d"
   - name: ghcr.io/omar-massfih/ingest
-    newTag: "sha-07bde2f" # bumped to a sha- tag by ingest CI on first push
+    newTag: "sha-9c2cdde" # bumped to a sha- tag by ingest CI on first push
   - name: ghcr.io/omar-massfih/omarmassfih.no-backend
     newTag: "sha-2c178f3"
