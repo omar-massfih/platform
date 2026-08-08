@@ -1,0 +1,58 @@
+# The Dagster UI. Read-only with respect to credentials: it loads the code
+# location to render the asset graph and run history, but never executes a
+# pipeline, so it gets the storage credentials and nothing else — no Postgres
+# destination DSN, no Frost client id, no Garage keys.
+#
+# Deliberately ClusterIP with no Ingress. The Dagster webserver ships no
+# authentication, and this cluster's other hosts are public behind Traefik.
+# Reach it with:
+#
+#   kubectl -n platform port-forward svc/ingest-webserver 3000:3000
+#
+# Putting it on a hostname means putting an unauthenticated control plane —
+# one that can launch runs — on the internet. That needs an auth middleware
+# first, not just an Ingress.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingest-webserver
+  labels: { app: ingest-webserver }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: ingest-webserver }
+  template:
+    metadata:
+      labels: { app: ingest-webserver }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: webserver
+          image: ghcr.io/omar-massfih/ingest
+          imagePullPolicy: Always
+          command:
+            ["dagster-webserver", "-h", "0.0.0.0", "-p", "3000", "-w", "/dev/null"]
+          ports:
+            - { name: http, containerPort: 3000 }
+          env:
+            - name: DAGSTER_PG_HOST
+              valueFrom: { secretKeyRef: { name: pg-app, key: host } }
+            - name: DAGSTER_PG_USERNAME
+              valueFrom: { secretKeyRef: { name: pg-app, key: username } }
+            - name: DAGSTER_PG_PASSWORD
+              valueFrom: { secretKeyRef: { name: pg-app, key: password } }
+            - name: DAGSTER_PG_DB
+              value: dagster
+          resources:
+            requests: { cpu: 50m, memory: 256Mi }
+            limits: { memory: 1Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingest-webserver
+spec:
+  selector: { app: ingest-webserver }
+  ports:
+    - { name: http, port: 3000, targetPort: http }

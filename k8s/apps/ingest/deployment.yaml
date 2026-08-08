@@ -1,6 +1,12 @@
-# Long-running orchestrator from the `ingest` repo: one process firing each
-# layer in pipelines/*.yaml on its own cron `schedule`. Scheduling lives in
-# those YAMLs, not here. Uses the image's default CMD (python orchestrator.py).
+# The Dagster daemon from the `ingest` repo: it fires the schedules built from
+# pipelines/*.yaml and executes the runs. Scheduling lives in those YAMLs, not
+# here. Uses the image's default CMD (dagster-daemon run).
+#
+# Runs execute as subprocesses of this pod, not in pods of their own, so this
+# container's memory limit is what bounds them. That is deliberate at one
+# replica; a K8sRunLauncher would give each run its own pod and its own limit,
+# and is the next step if runs start competing.
+#
 # Credentials are injected from Secrets; the ingest code stays platform-agnostic.
 #
 # No blanket DLT_DESTINATION override: bronze writes Parquet to Garage and
@@ -15,7 +21,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate                  # single scheduler — never run two (double-fires)
+    type: Recreate                  # one daemon only — two would double-fire schedules
   selector:
     matchLabels: { app: ingest }
   template:
@@ -44,6 +50,16 @@ spec:
                   key: FROST_CLIENT_ID
             - name: CREDENTIALS__PASSWORD
               value: ""
+            # dagster's own run/event/schedule storage — see dagster.yaml in
+            # the image. Its database is created by database.yaml alongside.
+            - name: DAGSTER_PG_HOST
+              valueFrom: { secretKeyRef: { name: pg-app, key: host } }
+            - name: DAGSTER_PG_USERNAME
+              valueFrom: { secretKeyRef: { name: pg-app, key: username } }
+            - name: DAGSTER_PG_PASSWORD
+              valueFrom: { secretKeyRef: { name: pg-app, key: password } }
+            - name: DAGSTER_PG_DB
+              value: dagster
             # bronze writes Parquet to Garage (DESTINATION__), silver reads it
             # back (SOURCES__) — two dlt config namespaces, one bucket.
             - name: DESTINATION__FILESYSTEM__BUCKET_URL
