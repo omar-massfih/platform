@@ -31,8 +31,9 @@ spec:
         - name: webserver
           image: ghcr.io/omar-massfih/ingest
           imagePullPolicy: Always
-          command:
-            ["dagster-webserver", "-h", "0.0.0.0", "-p", "3000", "-w", "/dev/null"]
+          # no -w: the code location comes from [tool.dagster] in
+          # /app/pyproject.toml, which dagster discovers from the working dir
+          command: ["dagster-webserver", "-h", "0.0.0.0", "-p", "3000"]
           ports:
             - { name: http, containerPort: 3000 }
           env:
