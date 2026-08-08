@@ -1,12 +1,10 @@
-# Long-running orchestrator from the `ingest` repo: one process that fires each
-# pipeline in sources/*.yaml on its own cron `schedule`. Scheduling lives in the
-# source YAMLs, not here. Uses the image's default CMD (python orchestrator.py).
+# Long-running orchestrator from the `ingest` repo: one process firing each
+# pipeline in pipelines/*.yaml on its own cron `schedule`. Scheduling lives in
+# those YAMLs, not here. Uses the image's default CMD (python orchestrator.py).
 # Credentials are injected from Secrets; the ingest code stays platform-agnostic.
 #
-# No blanket DLT_DESTINATION override here (deliberately) — sources/weather.yaml
-# now has pipelines on two different destinations (postgres and filesystem), and
-# a global override would force both onto one, silently breaking the other. Each
-# pipeline's own `destination:` field in its YAML is authoritative.
+# No blanket DLT_DESTINATION override: each pipeline's own `destination:` field
+# is authoritative, and an override here would silently outrank all of them.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,39 +42,14 @@ spec:
                   key: FROST_CLIENT_ID
             - name: CREDENTIALS__PASSWORD
               value: ""
-            # weather_landing writes here (DESTINATION__), weather_raw reads it
-            # back (SOURCES__) — two separate dlt config namespaces, same bucket.
-            - name: DESTINATION__FILESYSTEM__BUCKET_URL
-              value: s3://ingest-landing
-            - name: DESTINATION__FILESYSTEM__CREDENTIALS__ENDPOINT_URL
-              value: http://garage.platform.svc.cluster.local:3900
-            - name: DESTINATION__FILESYSTEM__CREDENTIALS__AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: garage-s3
-                  key: GARAGE_DEFAULT_ACCESS_KEY
-            - name: DESTINATION__FILESYSTEM__CREDENTIALS__AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: garage-s3
-                  key: GARAGE_DEFAULT_SECRET_KEY
-            - name: SOURCES__FILESYSTEM__BUCKET_URL
-              value: s3://ingest-landing
-            - name: SOURCES__FILESYSTEM__CREDENTIALS__ENDPOINT_URL
-              value: http://garage.platform.svc.cluster.local:3900
-            - name: SOURCES__FILESYSTEM__CREDENTIALS__AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: garage-s3
-                  key: GARAGE_DEFAULT_ACCESS_KEY
-            - name: SOURCES__FILESYSTEM__CREDENTIALS__AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: garage-s3
-                  key: GARAGE_DEFAULT_SECRET_KEY
           resources:
+            # bysykkel_trips pulls three ~88 MB JSON month files through
+            # rest_api, which holds each response in memory. Measured peak RSS
+            # for the real 3-month run: 1.88 GiB (one month alone: 1.64 GiB).
+            # 256Mi OOMKilled it six times; the headroom is for July/August
+            # being larger than the June file that was measured.
             requests:
               cpu: 50m
-              memory: 128Mi
-            limits:
               memory: 256Mi
+            limits:
+              memory: 3Gi
