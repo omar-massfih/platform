@@ -22,13 +22,22 @@ spec:
     size: 5Gi
     storageClass: local-path         # k3s default provisioner (RWO, node-local)
 
-  # Kept deliberately light for the shared VM. shared_buffers ~25% of the limit.
+  # 512Mi was too light: silver's trips merge — ~500k rows deduplicated on a
+  # three-column key, through dlt's staging tables — pushed postgres past it
+  # and the kernel OOM-killed the database mid-load. The ingest pod was fine
+  # throughout (no restarts, 3Gi untouched); the limit was on the wrong
+  # component. This database is shared with the notes backend, so taking it
+  # down costs more than a failed run.
+  #
+  # The node has ~9Gi free. shared_buffers stays at 128MB deliberately: the
+  # OOM came from work memory during the merge, not from the buffer cache, and
+  # raising shared_buffers would lift the floor rather than the ceiling.
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
-    limits:
       memory: 512Mi
+    limits:
+      memory: 2Gi
 
   postgresql:
     parameters:
