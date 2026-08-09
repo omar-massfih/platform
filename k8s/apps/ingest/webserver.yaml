@@ -1,7 +1,11 @@
-# The Dagster UI. Read-only with respect to credentials: it loads the code
-# location to render the asset graph and run history, but never executes a
-# pipeline, so it gets the storage credentials and nothing else — no Postgres
-# destination DSN, no Frost client id, no Garage keys.
+# The Dagster UI. It loads the code location to render the asset graph and run
+# history, but never executes a pipeline.
+#
+# It still needs the Frost client id, which is not obvious: dagster-dlt builds
+# every DltSource at *definition* time, and rest_api_source resolves
+# `auth: http_basic` eagerly, so weather's credential is required just to draw
+# the graph. It needs nothing else — no Postgres destination DSN, no Garage
+# keys — because those resolve when a pipeline runs, which the UI never does.
 #
 # Deliberately ClusterIP with no Ingress. The Dagster webserver ships no
 # authentication, and this cluster's other hosts are public behind Traefik.
@@ -45,6 +49,11 @@ spec:
               valueFrom: { secretKeyRef: { name: pg-app, key: password } }
             - name: DAGSTER_PG_DB
               value: dagster
+            # see the note above: needed to build the source, not to run it
+            - name: CREDENTIALS__USERNAME
+              valueFrom: { secretKeyRef: { name: frost, key: FROST_CLIENT_ID } }
+            - name: CREDENTIALS__PASSWORD
+              value: ""
           resources:
             requests: { cpu: 50m, memory: 256Mi }
             limits: { memory: 1Gi }
