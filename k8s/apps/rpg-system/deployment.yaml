@@ -1,0 +1,73 @@
+# Rank-based habit tracker from the `rpg-system` repo. One container serves both
+# the API and the static status window it renders.
+#
+# The connection is assembled from pg-app's individual keys rather than its `uri`,
+# because that URI points at the `ingest` database and this app owns `rpg`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpg-system
+  labels: { app: rpg-system }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: rpg-system }
+  template:
+    metadata:
+      labels: { app: rpg-system }
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: app
+          image: ghcr.io/omar-massfih/rpg-system
+          imagePullPolicy: Always
+          ports:
+            - { name: http, containerPort: 8000 }
+          env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: host }
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: port }
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: username }
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: password }
+            - name: PGDATABASE
+              value: rpg
+          # The schema is applied and the seed runs during startup, before the
+          # pod reports ready. Generous failureThreshold covers a cold CNPG.
+          startupProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 3
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 25m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          # The root filesystem is read-only, so give the runtime somewhere to
+          # write. Nothing here needs to survive a restart.
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

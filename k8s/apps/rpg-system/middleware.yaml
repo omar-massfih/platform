@@ -1,0 +1,14 @@
+# BasicAuth for the status window. Inert until a router references it — the
+# ingress annotation that does so is commented out until the `rpg-system-auth`
+# secret exists. See ingress.yaml for the two-step activation.
+#
+# The secret holds an htpasswd line under the key `users` and is deliberately
+# absent from git.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rpg-system-auth
+spec:
+  basicAuth:
+    secret: rpg-system-auth
+    realm: System

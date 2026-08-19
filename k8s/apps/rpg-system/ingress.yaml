@@ -1,0 +1,38 @@
+# Public at https://rpg.omarmassfih.no.
+#
+# The readings this app stores are personal health data. Before entering any,
+# put BasicAuth in front of it — two steps, in this order:
+#
+#   1. Create the credential secret (it is not in git):
+#        htpasswd -nbB omar '<password>' | \
+#          kubectl -n platform create secret generic rpg-system-auth \
+#            --from-file=users=/dev/stdin
+#
+#   2. Uncomment the middleware annotation below and commit. Flux applies it
+#      within a minute.
+#
+# Enabling the annotation before the secret exists makes Traefik answer 500,
+# which is why the two steps are ordered rather than shipped together.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rpg-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # traefik.ingress.kubernetes.io/router.middlewares: platform-rpg-system-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [rpg.omarmassfih.no]
+      secretName: rpg-system-tls
+  rules:
+    - host: rpg.omarmassfih.no
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rpg-system
+                port: { name: http }

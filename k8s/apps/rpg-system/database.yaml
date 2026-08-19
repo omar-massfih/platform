@@ -1,0 +1,12 @@
+# A database of its own rather than a schema in `ingest`: this app owns its
+# tables in `public`, which in the ingest database already belongs to the notes
+# backend. Same arrangement as dagster.
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: rpg
+spec:
+  name: rpg
+  owner: ingest # reuse the existing role; pg-app's credentials already grant it
+  cluster:
+    name: pg
