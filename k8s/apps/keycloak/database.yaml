@@ -1,0 +1,11 @@
+# Keycloak keeps its own schema in `public`, so it gets a database rather than a
+# schema in one already spoken for. Same arrangement as dagster and rpg.
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: keycloak
+spec:
+  name: keycloak
+  owner: ingest # reuse the existing role; pg-app's credentials already grant it
+  cluster:
+    name: pg

@@ -1,0 +1,86 @@
+# Identity provider for the platform. Every service that wants a login becomes
+# an OIDC client here rather than growing its own user table.
+#
+# TLS terminates at Traefik, so Keycloak speaks plain HTTP behind it and is told
+# its public hostname explicitly — without that it builds redirect URLs from the
+# request and OIDC breaks in ways that are tedious to diagnose.
+#
+# CPU: the node has two cores and requests were already at 81% before this. The
+# request is deliberately modest and the limit generous, because Keycloak is
+# hungry for the first minute and nearly idle afterwards.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels: { app: keycloak }
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # single instance against one database; no rolling overlap
+  selector:
+    matchLabels: { app: keycloak }
+  template:
+    metadata:
+      labels: { app: keycloak }
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.0
+          args: ["start"]
+          ports:
+            - { name: http, containerPort: 8080 }
+            - { name: management, containerPort: 9000 }
+          env:
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: jdbc:postgresql://pg-rw.platform.svc:5432/keycloak
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: username }
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: pg-app, key: password }
+
+            - name: KC_HOSTNAME
+              value: https://auth.omarmassfih.no
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+
+            # First-boot admin only. Once a real admin account exists this pair
+            # can be dropped from the secret and the deployment.
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef: { name: keycloak-admin, key: username }
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: keycloak-admin, key: password }
+
+          # Health lives on the management port from Keycloak 25 onward.
+          startupProbe:
+            httpGet: { path: /health/started, port: management }
+            periodSeconds: 5
+            failureThreshold: 60 # cold JVM plus schema migration on first boot
+          readinessProbe:
+            httpGet: { path: /health/ready, port: management }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health/live, port: management }
+            periodSeconds: 30
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 150m
+              memory: 768Mi
+            limits:
+              memory: 1536Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
