@@ -58,6 +58,10 @@ spec:
             - name: OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef: { name: rpg-system-oidc, key: OIDC_CLIENT_ID }
+            # Keys come from the service next door; the issuer claim is still
+            # checked against the public URL the token was minted with.
+            - name: OIDC_JWKS_URL
+              value: http://keycloak.platform.svc:8080/realms/platform/protocol/openid-connect/certs
             # REGISTRATION_CODE is deliberately unset: registration stays closed
             # until a code is added here, which is the right default at a public
             # URL. Add it as a key on rpg-system-session to open sign-up.
