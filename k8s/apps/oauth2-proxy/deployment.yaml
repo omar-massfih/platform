@@ -1,9 +1,12 @@
-# Sits between Traefik and anything that needs a login. Traefik asks it whether
-# a request is authenticated; it owns the redirect dance with Keycloak and the
-# session cookie, so no application has to.
+# Sits in the request path between Traefik and the app. It serves /oauth2/*
+# itself and forwards everything else once a session exists, so the application
+# never sees an unauthenticated request and never runs a login of its own.
 #
-# Run in auth-only mode: `--upstream=static://202` means it never proxies
-# traffic, it only answers yes or no. Traefik routes the real request itself.
+# It is in the path rather than beside it deliberately. Traefik 2.11 can ask an
+# auth service for a verdict, but its errors middleware answers a denial with
+# the original 401 status — so the browser gets a Location header on a response
+# it will not follow, and the flow dead-ends on a bare link. Proxying means the
+# redirect is a real 302.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,7 +38,7 @@ spec:
             - --cookie-samesite=lax
             - --http-address=0.0.0.0:4180
             - --reverse-proxy=true
-            - --upstream=static://202
+            - --upstream=http://rpg-system.platform.svc:8000
             - --set-xauthrequest=true
             # The application verifies this token itself rather than trusting a
             # header, so a pod inside the cluster cannot forge an identity.

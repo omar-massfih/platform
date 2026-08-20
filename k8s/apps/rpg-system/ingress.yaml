@@ -1,33 +1,6 @@
-# Two routers on one host.
-#
-# /oauth2/* belongs to oauth2-proxy and must stay unauthenticated — it is where
-# the sign-in page and the callback live, so guarding it would lock the door
-# from the inside. Traefik matches the longer prefix first.
-#
-# Everything else is the application, behind the auth chain.
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: rpg-system-oauth
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-spec:
-  ingressClassName: traefik
-  tls:
-    - hosts: [rpg.omarmassfih.no]
-      secretName: rpg-system-tls
-  rules:
-    - host: rpg.omarmassfih.no
-      http:
-        paths:
-          - path: /oauth2
-            pathType: Prefix
-            backend:
-              service:
-                name: oauth2-proxy
-                port: { name: http }
----
+# Traefik routes the host to oauth2-proxy, which serves /oauth2/* itself and
+# forwards everything else to the application once a session exists. There is no
+# unauthenticated path to the app: it is not the ingress backend at all.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -35,9 +8,6 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # Order matters: errors first, so it is in place to catch the 401 that
-    # forwardAuth returns and turn it into the sign-in page.
-    traefik.ingress.kubernetes.io/router.middlewares: platform-oidc-signin@kubernetescrd,platform-oidc-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
@@ -51,5 +21,5 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: rpg-system
+                name: oauth2-proxy
                 port: { name: http }
