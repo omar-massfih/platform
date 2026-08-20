@@ -39,14 +39,20 @@ spec:
                 secretKeyRef: { name: pg-app, key: password }
             - name: PGDATABASE
               value: rpg
-            # Owner login. Without both of these the app serves read-only to
-            # everyone — there is no owner to become, which is a safe failure.
-            - name: OWNER_PASSWORD_HASH
-              valueFrom:
-                secretKeyRef: { name: rpg-system-session, key: OWNER_PASSWORD_HASH }
+            # Signs session cookies. Absent, nobody can log in — a safe failure.
             - name: SESSION_SECRET
               valueFrom:
                 secretKeyRef: { name: rpg-system-session, key: SESSION_SECRET }
+            # Used once, on the boot that migrates the pre-accounts data into a
+            # real user. Keeping it means that account's password stays valid.
+            - name: OWNER_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef: { name: rpg-system-session, key: OWNER_PASSWORD_HASH }
+            - name: OWNER_USERNAME
+              value: omar
+            # REGISTRATION_CODE is deliberately unset: registration stays closed
+            # until a code is added here, which is the right default at a public
+            # URL. Add it as a key on rpg-system-session to open sign-up.
           # The schema is applied and the seed runs during startup, before the
           # pod reports ready. Generous failureThreshold covers a cold CNPG.
           startupProbe:
