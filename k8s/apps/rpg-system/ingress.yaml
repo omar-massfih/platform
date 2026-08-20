@@ -4,9 +4,7 @@
 # the sign-in page and the callback live, so guarding it would lock the door
 # from the inside. Traefik matches the longer prefix first.
 #
-# Everything else is the application. The auth middlewares are commented out
-# until oauth2-proxy is confirmed healthy: enabling them against a broken chain
-# takes the site down rather than protecting it.
+# Everything else is the application, behind the auth chain.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -39,7 +37,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Order matters: errors first, so it is in place to catch the 401 that
     # forwardAuth returns and turn it into the sign-in page.
-    # traefik.ingress.kubernetes.io/router.middlewares: platform-oidc-signin@kubernetescrd,platform-oidc-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: platform-oidc-signin@kubernetescrd,platform-oidc-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

@@ -50,6 +50,14 @@ spec:
                 secretKeyRef: { name: rpg-system-session, key: OWNER_PASSWORD_HASH }
             - name: OWNER_USERNAME
               value: omar
+            # Verification only: the issuer to trust and the client the token
+            # must have been issued to. oauth2-proxy holds the secret.
+            - name: OIDC_ISSUER
+              valueFrom:
+                secretKeyRef: { name: rpg-system-oidc, key: OIDC_ISSUER }
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef: { name: rpg-system-oidc, key: OIDC_CLIENT_ID }
             # REGISTRATION_CODE is deliberately unset: registration stays closed
             # until a code is added here, which is the right default at a public
             # URL. Add it as a key on rpg-system-session to open sign-up.
