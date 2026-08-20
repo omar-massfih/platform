@@ -1,159 +1,419 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Rajdhani:wght@400;500;600;700&display=swap");
+/* Generated from the design system. Do not hand-edit: regenerate from
+   frontend/src/design/tokens/* so the login page cannot drift from the
+   product it fronts. */
+
+/* Three Google-hosted families, exactly as the app loads them:
+   Cinzel (display / rank marks), Rajdhani (UI sans), Share Tech Mono (numerals).
+   No binaries are vendored — the app links the Google CSS API, so the design
+   system does the same to stay byte-identical to production. */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap");
+
+/* ── Colour ────────────────────────────────────────────────────────────────
+   Dark is the native world: a lit panel floating over a near-black ground.
+   Every value below is lifted verbatim from frontend/src/styles.css.
+   The light scope is an ADDITION to the product (documented in readme.md):
+   the same panel, lit from in front instead of behind. */
 
 :root {
+  color-scheme: dark;
+
+  /* Ground — the world behind the glass */
   --ground: #05080f;
+  --ground-2: #080d1a;
+
+  /* Panel fields */
   --panel: rgba(11, 19, 38, 0.88);
+  --panel-2: rgba(16, 27, 50, 0.75);
+  --raised: rgba(28, 45, 76, 0.85);
+
+  /* Edges and light */
   --edge: rgba(103, 176, 214, 0.38);
-  --glow: rgba(127, 227, 255, 0.28);
+  --edge-soft: rgba(103, 176, 214, 0.16);
+  --glow: rgba(127, 227, 255, 0.14);
+
+  /* Accents */
   --cyan: #7fe3ff;
+  --gold: #f2c879;
+  --jade: #6fd9a6;
+  --rust: #ff9a86;
+  --focus: #7fe3ff;
+
+  /* Text ramp */
   --text: #e9f3fa;
   --text-2: #b3cbdc;
   --text-3: #8fa9bf;
-  --rust: #ff9a86;
-  --display: "Cinzel", Georgia, serif;
-  --sans: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+
+  /* Semantic aliases — prefer these in new work */
+  --surface-page: var(--ground);
+  --surface-panel: var(--panel);
+  --surface-inset: var(--panel-2);
+  --surface-raised: var(--raised);
+  --border-panel: var(--edge);
+  --border-divider: var(--edge-soft);
+  --text-body: var(--text);
+  --text-muted: var(--text-2);
+  --text-quiet: var(--text-3);
+  --accent-system: var(--cyan);
+  --accent-value: var(--gold);
+  --state-good: var(--jade);
+  --state-bad: var(--rust);
+
+  /* Fills used inside meters, strips and gates */
+  --track: rgba(127, 227, 255, 0.1);
+  --track-quiet: rgba(127, 227, 255, 0.07);
+  --track-day: rgba(127, 227, 255, 0.09);
+  --wash: rgba(127, 227, 255, 0.06);
+  --scanline: rgba(127, 227, 255, 0.014);
+  --page-glow-1: #0e1a30;
+  --page-glow-2: #0a1526;
+  --backdrop: rgba(3, 6, 12, 0.78);
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+[data-theme="light"] {
+  color-scheme: light;
+
+  --ground: #eaeff5;
+  --ground-2: #dfe7f0;
+
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-2: rgba(233, 240, 247, 0.8);
+  --raised: rgba(255, 255, 255, 0.92);
+
+  --edge: rgba(24, 66, 92, 0.34);
+  --edge-soft: rgba(24, 66, 92, 0.14);
+  --glow: rgba(14, 116, 144, 0.12);
+
+  --cyan: #0e7490;
+  --gold: #9a6708;
+  --jade: #10795a;
+  --rust: #b3392a;
+  --focus: #0e7490;
+
+  --text: #0b1524;
+  --text-2: #33506a;
+  --text-3: #5d7d96;
+
+  --track: rgba(14, 116, 144, 0.14);
+  --track-quiet: rgba(14, 116, 144, 0.09);
+  --track-day: rgba(14, 116, 144, 0.12);
+  --wash: rgba(14, 116, 144, 0.07);
+  --scanline: rgba(14, 116, 144, 0.012);
+  --page-glow-1: #ffffff;
+  --page-glow-2: #dce7f2;
+  --backdrop: rgba(196, 210, 224, 0.78);
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────────
+   Three voices, never mixed inside one string:
+   display  Cinzel        — rank marks, level figure, dialog + section titles
+   sans     Rajdhani      — every label, name and body line
+   mono     Share Tech Mono — anything the system measured: counts, dates, units */
+
+:root {
+  --display: "Cinzel", Georgia, serif;
+  --sans: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+  --mono: "Share Tech Mono", ui-monospace, Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.5rem;
+
+  /* Fluid display sizes, as used on the sheet */
+  --fs-name: clamp(1.75rem, 5vw, 2.5rem);
+  --fs-level: clamp(3rem, 11vw, 4.5rem);
+
+  /* Rank-mark sizes by context */
+  --fs-mark-attr: 2.75rem;
+  --fs-mark-sheet: 1.875rem;
+  --fs-mark-skill: 1.25rem;
+
+  --lh-body: 1.5;
+  --lh-tight: 1.05;
+
+  /* Letterspacing is how this system says "system": the wider the track,
+     the more machine-spoken the string. */
+  --ls-label: 0.22em;
+  --ls-attr: 0.18em;
+  --ls-heading: 0.16em;
+  --ls-btn: 0.1em;
+  --ls-tag: 0.14em;
+  --ls-eyebrow: 0.42em;
+  --ls-display: 0.04em;
+}
+
+/* ── Space ─────────────────────────────────────────────────────────────────
+   Values taken from the app, not snapped to a 4px grid: the panels really do
+   pad 0.9rem / 1.25rem and the stack gap really is fluid. */
+
+:root {
+  --space-1: 0.15rem;
+  --space-2: 0.25rem;
+  --space-3: 0.35rem;
+  --space-4: 0.4rem;
+  --space-5: 0.6rem;
+  --space-6: 0.7rem;
+  --space-7: 0.8rem;
+  --space-8: 1rem;
+  --space-9: 1.25rem;
+  --space-10: 1.5rem;
+  --space-11: 2rem;
+  --space-12: 2.25rem;
+  --space-13: 3rem;
+
+  /* Panel padding: cards use 1.25rem inline, the sheet 1.5rem */
+  --pad-card: 0.9rem 1.25rem 1rem;
+  --pad-card-x: 1.25rem;
+  --pad-sheet-x: 1.5rem;
+
+  /* Layout */
+  --shell-max: 900px;
+  --shell-pad-block: clamp(1.5rem, 4vw, 3rem);
+  --shell-pad-inline: clamp(0.875rem, 4vw, 2rem);
+  --stack-gap: clamp(1.25rem, 3vw, 1.75rem);
+
+  --radius: 2px;
+  --bracket: 13px;
+  --meter-h: 10px;
+  --meter-h-muted: 4px;
+  --day-h: 12px;
+}
+
+/* ── Frame and elevation ───────────────────────────────────────────────────
+   Nothing here casts a soft drop shadow onto a page. A panel is a lit window:
+   a hard 1px seat against the ground, an outward glow, and an inner top
+   highlight where the light catches the edge. */
+
+:root {
+  --shadow-panel:
+    0 0 0 1px rgba(5, 8, 15, 0.6),
+    0 0 18px -14px var(--glow),
+    inset 0 1px 0 rgba(127, 227, 255, 0.05);
+  --shadow-signin:
+    0 0 0 1px rgba(5, 8, 15, 0.6),
+    0 0 28px -14px var(--glow),
+    inset 0 1px 0 rgba(127, 227, 255, 0.05);
+  --shadow-modal: 0 0 30px -14px var(--glow), 0 24px 64px -22px rgba(0, 0, 0, 0.8);
+  --shadow-toast: 0 0 22px -12px var(--glow);
+  --shadow-rankup: 0 0 48px -14px var(--glow), inset 0 1px 0 rgba(127, 227, 255, 0.12);
+  --shadow-hover: 0 0 12px -8px var(--glow);
+  --shadow-lit: 0 0 14px -9px var(--glow);
+
+  --blur-panel: blur(3px);
+  --blur-backdrop: blur(2px);
+
+  /* Glow attached to a coloured mark or fill. Marks are lit through a mix, not
+     at full currentColor — at full strength seven of them on one screen turned
+     into haze. */
+  --glow-mark: 0 0 14px color-mix(in srgb, currentColor 30%, transparent);
+  --glow-seg: 0 0 6px -4px;
+}
+
+[data-theme="light"] {
+  --shadow-panel:
+    0 0 0 1px rgba(24, 66, 92, 0.1),
+    0 0 22px -8px var(--glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-signin:
+    0 0 0 1px rgba(24, 66, 92, 0.1),
+    0 0 30px -10px var(--glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-modal: 0 0 40px -14px var(--glow), 0 24px 64px -24px rgba(11, 21, 36, 0.28);
+  --shadow-toast: 0 0 24px -10px var(--glow);
+  --shadow-rankup: 0 0 50px -14px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-hover: 0 0 14px -6px var(--glow);
+  --shadow-lit: 0 0 16px -8px var(--glow);
+  --glow-mark: 0 0 0 currentColor;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────
+   The page itself: two radial lights over the ground, plus a barely-there
+   scanline so the surface reads as a screen. Every colour is painted
+   explicitly; nothing is inherited from the host. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
   margin: 0;
-  min-height: 100vh;
   color: var(--text);
   font-family: var(--sans);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   background:
-    radial-gradient(1100px 620px at 50% -10%, #12203c 0%, transparent 70%),
-    radial-gradient(800px 500px at 90% 110%, #0d1b33 0%, transparent 65%),
+    radial-gradient(1100px 620px at 50% -10%, var(--page-glow-1) 0%, transparent 70%),
+    radial-gradient(800px 500px at 90% 110%, var(--page-glow-2) 0%, transparent 65%),
     var(--ground);
   background-attachment: fixed;
+  min-height: 100vh;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--scanline) 0px,
+    var(--scanline) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--cyan);
+  text-decoration: none;
+  border-bottom: 1px solid var(--edge);
+}
+
+a:hover {
+  color: var(--text);
+  border-bottom-color: var(--cyan);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* ── Keycloak's base markup, wearing the signin pattern ──────────────────── */
+
+body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding: clamp(2rem, 10vh, 6rem) 1rem 3rem;
 }
 
-/* Scanlines, kept faint enough not to fight the form on top of them. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(127, 227, 255, 0.025) 0px, rgba(127, 227, 255, 0.025) 1px,
-    transparent 1px, transparent 3px);
-}
-
-/* base wraps everything in #kc-content-wrapper; that is the panel. */
+/* base wraps the whole card in #kc-content-wrapper. */
 #kc-content-wrapper {
   position: relative;
+  z-index: 2;
   width: min(21rem, 100%);
   background: var(--panel);
   border: 1px solid var(--edge);
-  border-radius: 2px;
-  backdrop-filter: blur(3px);
-  box-shadow: 0 0 0 1px rgba(5, 8, 15, 0.6), 0 0 34px -8px var(--glow),
-    inset 0 1px 0 rgba(127, 227, 255, 0.09);
-  padding: 2rem 1.5rem 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-signin);
+  backdrop-filter: var(--blur-panel);
+  padding: var(--space-11) var(--space-10) var(--space-10);
 }
 #kc-content-wrapper::before,
 #kc-content-wrapper::after {
   content: "";
   position: absolute;
-  width: 15px; height: 15px;
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
   border-color: var(--cyan);
   opacity: 0.8;
-  pointer-events: none;
 }
-#kc-content-wrapper::before {
-  top: -1px; left: -1px;
-  border-top: 2px solid; border-left: 2px solid;
-}
-#kc-content-wrapper::after {
-  bottom: -1px; right: -1px;
-  border-bottom: 2px solid; border-right: 2px solid;
-}
+#kc-content-wrapper::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+#kc-content-wrapper::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
 #kc-header, #kc-header-wrapper {
   text-align: center;
-  font-family: var(--display);
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-family: var(--sans);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
-  color: var(--cyan);
-  text-shadow: 0 0 18px var(--glow);
-  font-size: 0.8125rem;
-  margin-bottom: 1.25rem;
+  color: var(--text-3);
+  margin-bottom: var(--space-9);
 }
 
 #kc-page-title {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-9);
   font-family: var(--display);
   font-weight: 600;
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
   letter-spacing: 0.04em;
   text-align: center;
   color: var(--text);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--cyan) 22%, transparent);
 }
 
 label {
   display: block;
   margin-bottom: 0.35rem;
-  font-size: 0.75rem;
+  font-family: var(--sans);
+  font-size: var(--fs-xs);
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--text-3);
 }
 
 input[type="text"], input[type="password"], input[type="email"] {
   width: 100%;
-  margin-bottom: 0.9rem;
+  margin-bottom: var(--space-7);
   padding: 0.5rem 0.7rem;
   font-family: var(--sans);
-  font-size: 1rem;
+  font-size: var(--fs-md);
   color: var(--text);
   background: rgba(5, 10, 20, 0.7);
   border: 1px solid var(--edge);
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
-input:focus {
-  outline: 2px solid var(--cyan);
+input:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-color: var(--cyan);
 }
+input:focus { border-color: var(--cyan); }
 
 input[type="submit"], button[type="submit"] {
   width: 100%;
-  margin-top: 0.35rem;
+  margin-top: var(--space-2);
   padding: 0.55rem 0.8rem;
   font-family: var(--sans);
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--cyan);
-  background: linear-gradient(180deg, rgba(127,227,255,0.22), rgba(127,227,255,0.1));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--cyan) 22%, transparent),
+    color-mix(in srgb, var(--cyan) 10%, transparent));
   border: 1px solid var(--cyan);
-  border-radius: 2px;
-  box-shadow: 0 0 16px -4px var(--glow);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lit);
   cursor: pointer;
 }
 input[type="submit"]:hover, button[type="submit"]:hover {
-  background: linear-gradient(180deg, rgba(127,227,255,0.32), rgba(127,227,255,0.16));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--cyan) 32%, transparent),
+    color-mix(in srgb, var(--cyan) 16%, transparent));
 }
 
-/* Keycloak states its own errors; they must stay readable and stay red. */
-#kc-error-message, .kc-feedback-text, .pf-c-alert__title, .alert-error {
-  margin-bottom: 1rem;
+/* Keycloak states its own errors. They stay in the error colour and stay read. */
+#kc-error-message, .kc-feedback-text, .pf-c-alert__title, .alert-error, .input-error {
+  margin-bottom: var(--space-8);
   color: var(--rust);
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
 }
 
 a { color: var(--cyan); }
-#kc-form-options, #kc-registration, #kc-info { font-size: 0.875rem; color: var(--text-2); }
+#kc-form-options, #kc-registration, #kc-info { font-size: var(--fs-sm); color: var(--text-2); }
 #kc-form-options label { display: inline; text-transform: none; letter-spacing: 0; }
-select { color: var(--text); background: rgba(5,10,20,0.7); border: 1px solid var(--edge); }
+select { color: var(--text); background: rgba(5, 10, 20, 0.7); border: 1px solid var(--edge); }
