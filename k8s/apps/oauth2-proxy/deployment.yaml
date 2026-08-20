@@ -33,6 +33,9 @@ spec:
             - --email-domain=*
             - --redirect-url=https://rpg.omarmassfih.no/oauth2/callback
             - --whitelist-domain=rpg.omarmassfih.no
+            # Sign-out hands the browser on to the provider to end the session
+            # there too; without this the proxy refuses to send it.
+            - --whitelist-domain=auth.omarmassfih.no
             - --cookie-domain=rpg.omarmassfih.no
             - --cookie-secure=true
             - --cookie-samesite=lax
