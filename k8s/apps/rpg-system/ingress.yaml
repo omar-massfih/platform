@@ -1,18 +1,35 @@
-# Public at https://rpg.omarmassfih.no.
+# Two routers on one host.
 #
-# The readings this app stores are personal health data. Before entering any,
-# put BasicAuth in front of it — two steps, in this order:
+# /oauth2/* belongs to oauth2-proxy and must stay unauthenticated — it is where
+# the sign-in page and the callback live, so guarding it would lock the door
+# from the inside. Traefik matches the longer prefix first.
 #
-#   1. Create the credential secret (it is not in git):
-#        htpasswd -nbB omar '<password>' | \
-#          kubectl -n platform create secret generic rpg-system-auth \
-#            --from-file=users=/dev/stdin
-#
-#   2. Uncomment the middleware annotation below and commit. Flux applies it
-#      within a minute.
-#
-# Enabling the annotation before the secret exists makes Traefik answer 500,
-# which is why the two steps are ordered rather than shipped together.
+# Everything else is the application. The auth middlewares are commented out
+# until oauth2-proxy is confirmed healthy: enabling them against a broken chain
+# takes the site down rather than protecting it.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rpg-system-oauth
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [rpg.omarmassfih.no]
+      secretName: rpg-system-tls
+  rules:
+    - host: rpg.omarmassfih.no
+      http:
+        paths:
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: oauth2-proxy
+                port: { name: http }
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -20,7 +37,9 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # traefik.ingress.kubernetes.io/router.middlewares: platform-rpg-system-auth@kubernetescrd
+    # Order matters: errors first, so it is in place to catch the 401 that
+    # forwardAuth returns and turn it into the sign-in page.
+    # traefik.ingress.kubernetes.io/router.middlewares: platform-oidc-signin@kubernetescrd,platform-oidc-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

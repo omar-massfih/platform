@@ -18,6 +18,7 @@ resources:
   - apps/omarmassfih-backend # notes/chat API; authored notes seed into Postgres at startup
   - apps/rpg-system # rank tracker; own `rpg` database, API + static UI in one image
   - apps/keycloak # platform SSO; own `keycloak` database, admin creds out of band
+  - apps/oauth2-proxy # ForwardAuth for Traefik; owns the OIDC dance for every app
 # All images pulled from ghcr, pinned to a build tag. Bump these (and push new
 # images) to roll out a new version; Flux applies the change.
 images:
