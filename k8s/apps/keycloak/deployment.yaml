@@ -84,3 +84,20 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
+
+          # Two files into two directories, so the theme folder has the shape
+          # Keycloak expects: properties at the root, stylesheet under resources.
+          volumeMounts:
+            - name: theme
+              mountPath: /opt/keycloak/themes/system/login/theme.properties
+              subPath: theme.properties
+              readOnly: true
+            - name: theme
+              mountPath: /opt/keycloak/themes/system/login/resources/css/login.css
+              subPath: login.css
+              readOnly: true
+
+      volumes:
+        - name: theme
+          configMap:
+            name: keycloak-theme

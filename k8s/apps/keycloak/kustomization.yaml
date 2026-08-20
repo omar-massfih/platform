@@ -5,3 +5,12 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+
+# Generated rather than written out, so the name carries a content hash and
+# Keycloak restarts when the theme changes. Without that, an edited stylesheet
+# would sit behind the theme cache until somebody noticed.
+configMapGenerator:
+  - name: keycloak-theme
+    files:
+      - theme/theme.properties
+      - theme/login.css
