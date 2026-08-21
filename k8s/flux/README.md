@@ -13,36 +13,45 @@ Nothing in a service repo needs credentials on this one. That is the point of
 doing it this way rather than with a cross-repo PAT in each service's CI.
 
 **These manifests are not live yet.** `../kustomization.yaml` does not list this
-directory, on purpose: the CRDs below are not installed on the cluster, and
-kustomize-controller fails the *entire* build when a resource has no matching
-kind — which would stop every app in this repo from reconciling, not just this
-one. Wire it in as the last step, after the three prerequisites.
+directory, on purpose: kustomize-controller fails the *entire* build when a
+resource has no matching kind, which would stop every app in this repo from
+reconciling, not just this one. The CRDs exist now (prerequisite 1 below), but
+the two credentials do not, and an automation that cannot push is a
+CRD-shaped way of finding that out. Wire it in last.
+
+Prerequisite 1 is done. **2 and 3 are credentials, and both are outstanding.**
 
 ## Prerequisites
 
-### 1. The two controllers
+### 1. The two controllers — **done**
 
-A stock `flux install` ships source, kustomize, helm and notification. Image
-automation is two extra controllers, and this cluster does not have them:
+`image-reflector-controller` and `image-automation-controller` are installed at
+v1.2.3, the versions in the Flux v2.9.3 bundle this cluster runs. RBAC needed no
+change: `crd-controller-flux-system` already listed both service accounts, since
+the original install generated the full subject list even though only four
+controllers were deployed.
 
-```bash
-kubectl get deploy -n flux-system     # expect only the four
-```
+Recorded because none of it is obvious if it has to be done again:
 
-Install the pair at the version matching what is already running — the cluster
-is on Flux v2.9.4 (source-controller v1.9.3), where all three image kinds are
-`image.toolkit.fluxcd.io/v1`, not the `v1beta2` most blog posts show:
+- **Match the running version.** The cluster is on **v2.9.3**, not latest.
+  Applying `flux2/releases/download/v2.9.4/install.yaml` would have quietly
+  upgraded all four existing controllers and added `source-watcher` as a side
+  effect of wanting image automation. Take the two per-component files out of
+  that release's `manifests.tar.gz` instead.
+- **Pass `-n flux-system`.** The per-component manifests carry no `namespace:`
+  on the namespaced objects — `flux install` sets it via kustomize. A plain
+  `kubectl apply -f` puts the ServiceAccount and Deployment in `default`, where
+  they run happily and do nothing, because the ClusterRoleBindings name those
+  service accounts in `flux-system`.
+- **Repoint the images at ghcr.** The raw manifests reference Docker Hub
+  (`fluxcd/image-reflector-controller`), unlike the four already running, which
+  use `ghcr.io/fluxcd/...`. Left alone it works until Docker Hub's anonymous
+  pull limit says otherwise.
 
-```bash
-kubectl apply -f https://github.com/fluxcd/flux2/releases/download/v2.9.4/install.yaml
-```
+On API versions: at v2.9.x all three image kinds are `image.toolkit.fluxcd.io/v1`.
+Most writing on this still shows `v1beta2`.
 
-That bundle reconciles all six controllers to v2.9.4. It is a no-op for the four
-already at that version — check first with `kubectl -n flux-system get deploy -o
-wide`, and if they have drifted, decide about the upgrade before running it
-rather than as a side effect of wanting image automation.
-
-### 2. A registry credential in `flux-system`
+### 2. A registry credential in `flux-system` — outstanding
 
 The package is private: an anonymous `GET /v2/omar-massfih/rpg-system/tags/list`
 returns 401. The `ghcr` pull secret exists in `platform` for the kubelet;
@@ -50,7 +59,7 @@ image-reflector needs its own copy in `flux-system`. The `ghcr_secret` Ansible
 role creates the first one from `secrets/ghcr.pat` — extend it to both
 namespaces rather than copying the secret by hand.
 
-### 3. Git write access for Flux
+### 3. Git write access for Flux — outstanding
 
 This is the part that is easy to assume and wrong here. The `platform`
 GitRepository has **no `secretRef`** — it reads this public repo anonymously, so
@@ -87,7 +96,7 @@ the definition of.
 
 ## Enabling
 
-Once all three are done, two edits:
+Once 2 and 3 are done, two edits:
 
 1. Add `- flux` to `resources:` in `../kustomization.yaml`.
 2. Put the marker comment on the pin the automation should own:
