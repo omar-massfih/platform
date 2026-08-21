@@ -43,8 +43,10 @@ spec:
             - --reverse-proxy=true
             - --upstream=http://rpg-system.platform.svc:8000
             - --set-xauthrequest=true
-            # The application verifies this token itself rather than trusting a
-            # header, so a pod inside the cluster cannot forge an identity.
+            # Passed on for anything downstream that wants the raw token. The
+            # application does not verify it — identity is decided here and
+            # carried as headers, which is why nothing inside the cluster may
+            # reach the app except through this proxy.
             - --pass-access-token=true
             # A packaged build has no cookie and cannot follow a redirect. It
             # presents a bearer token, which the proxy validates against the
