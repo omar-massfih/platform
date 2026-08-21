@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Deliberately NOT listed in ../kustomization.yaml yet. See README.md — these
+# objects need CRDs that this cluster does not have, and kustomize-controller
+# fails the whole build when a resource has no matching kind. That would stop
+# every app in the repo from reconciling, not just this one.
+resources:
+  - rpg-system.yaml
+  - image-automation.yaml

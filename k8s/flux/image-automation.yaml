@@ -1,0 +1,38 @@
+# One automation for the whole repo. It is not per-image: every ImagePolicy in
+# flux-system is read, every `$imagePolicy` marker under .spec.update.path is
+# rewritten, and the result is one commit.
+#
+# It pushes to main, which the GitRepository above it is already watching — so
+# Flux's own commit is what triggers the rollout, one reconcile later.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: platform
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: platform
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: flux
+        email: flux@users.noreply.github.com
+      messageTemplate: |
+        Pin {{ range .Changed.Changes }}{{ .NewValue }} {{ end }}
+
+        Written by Flux image automation from the tags on ghcr.io. The
+        service repo's CI built the image; this is the rollout.
+    push:
+      branch: main
+  update:
+    path: ./k8s
+    # Setters, not the older annotation scan: the value to rewrite is named
+    # inline by a `# {"$imagePolicy": "..."}` comment on the line itself, so a
+    # pin that carries no marker is left alone. Every other service in
+    # kustomization.yaml stays manual until it grows one.
+    strategy: Setters

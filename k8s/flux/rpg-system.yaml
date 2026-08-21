@@ -1,0 +1,36 @@
+# Flux watches the registry for this image and writes the newest tag into the
+# pin in ../kustomization.yaml. The service repo's CI does not touch this repo
+# at all — it only builds and pushes.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: rpg-system
+  namespace: flux-system
+spec:
+  image: ghcr.io/omar-massfih/rpg-system
+  interval: 5m
+  # The package is private (an anonymous pull of the tag list returns 401), so
+  # listing tags needs the same registry credential the node pulls with. This
+  # is a second copy in flux-system; the one in `platform` is the kubelet's.
+  secretRef:
+    name: ghcr
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: rpg-system
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: rpg-system
+  # A policy has to be able to say which of two tags is newer, and a git sha
+  # cannot: sha-a1b2c3d and sha-9f8e7d6 have no order between them. So the
+  # build emits a second tag, <UTC timestamp>-<short sha>, and the policy reads
+  # the timestamp off it and sorts on that. The sha- tag stays on the image for
+  # people to read and to roll back to; nothing here looks at it.
+  filterTags:
+    pattern: '^(?P<ts>\d{14})-[0-9a-f]{7}$'
+    extract: "$ts"
+  policy:
+    alphabetical:
+      order: asc
