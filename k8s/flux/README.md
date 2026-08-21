@@ -106,8 +106,14 @@ pin the automation owns:
 
 ```yaml
   - name: ghcr.io/omar-massfih/rpg-system
-    newTag: "..." # {"$imagePolicy": "flux-system:rpg-system:tag"}
+    newTag: "..." # {"$imagepolicy": "flux-system:rpg-system:tag"}
 ```
+
+**The setter is `$imagepolicy`, all lowercase.** `$imagePolicy` appears in a lot
+of older writing and in some Flux docs pages; the setter name is case-sensitive
+and the camelCase spelling matches nothing. It does not error — the automation
+reports `repository up-to-date` forever, with the policy resolved and the source
+revision current, which looks exactly like success.
 
 Editing that line by hand works until the next reconcile puts it back. To pin
 deliberately — a rollback, say — suspend the automation first:
@@ -133,5 +139,3 @@ An `ImageRepository` + `ImagePolicy` pair here, and a marker comment on its pin.
 The `ImageUpdateAutomation` is repo-wide and does not change. Note that the
 service's build must emit an orderable tag for the policy to have anything to
 sort — see the comment in `rpg-system.yaml`.
-
-# touch: force a fresh automation run

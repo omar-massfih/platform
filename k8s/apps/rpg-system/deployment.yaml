@@ -20,7 +20,7 @@ spec:
         - name: ghcr
       containers:
         - name: app
-          image: ghcr.io/omar-massfih/rpg-system:sha-5b44ebe # {"$imagePolicy": "flux-system:rpg-system"}
+          image: ghcr.io/omar-massfih/rpg-system
           imagePullPolicy: Always
           ports:
             - { name: http, containerPort: 8000 }
