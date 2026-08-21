@@ -16,12 +16,29 @@ Compose / systemd into Kubernetes.
 | postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
 | ingest | none (Deployment) | dlt orchestrator from the `ingest` repo → Postgres; schedules live in its source YAMLs. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
 | omarmassfih-backend | **public** `https://backend.omarmassfih.no` (Traefik + TLS) | Notes and chat API. Authored notes and local FastEmbed vectors are synchronized into cluster-local Postgres before rollout; embeddings refresh hourly without Vercel. |
-| rpg-system | **public** `https://rpg.omarmassfih.no` (Traefik + TLS) | Rank tracker from the `rpg-system` repo; API + static UI in one image. Own CNPG database `rpg`. BasicAuth middleware ships disabled — see that app's `ingress.yaml`. |
+| rpg-system | **public** `https://rpg.omarmassfih.no` (Traefik + TLS) | Rank tracker from the `rpg-system` repo; API + static UI in one image. Own CNPG database `rpg`. Image tag auto-bumped here by that repo's build-push CI. BasicAuth middleware ships disabled — see that app's `ingress.yaml`. |
 
 All apps run in namespace `platform`. Agentic-assistent and omarmassfih-backend
 have public HTTP APIs. The proxy, browser and both pr-pilot bots stay
 cluster-internal. Postgres is a cluster-internal data store (CloudNativePG); its
 operator lives in `cnpg-system`, the DB itself in `platform`.
+
+## How a change reaches the node
+
+**Flux**, in `flux-system`, watches this repo's `main` branch and applies `./k8s`
+with `prune: true` — a one-minute poll on the git source, ten minutes on the
+kustomization. Nothing here is deployed by pushing to the cluster; it is deployed
+by merging to `main`.
+
+So the whole path for a service change is:
+
+```
+service repo push → build-push CI → ghcr image + `newTag` bumped here → Flux → rolling update
+```
+
+`ansible/playbooks/50-apps.yml` does the same apply by hand. It is the bootstrap
+and the break-glass, not the everyday route — and reaching for `kubectl set image`
+directly only creates drift that Flux will undo on its next reconcile.
 
 ## Layout
 
@@ -45,9 +62,14 @@ secrets/                      git-ignored env/creds + *.example templates
    `pr-pilot` repos (edit `IMAGE` per repo). For `chatgpt-proxy` / `chatgpt-browser`
    (no GitHub remote) either create repos or build from the VM:
    `./scripts/push-from-vm.sh chatgpt-proxy '~/chatgpt-openai-proxy' dockerfiles/chatgpt-proxy.Dockerfile`
-   The **ingest** repo already carries its own `build-push.yml` (arm64 → ghcr) that
-   also bumps the `ingest` image pin here on each push — it needs a `PLATFORM_PAT`
-   secret (contents:write on this repo). Nothing to add on this side.
+   The **ingest** and **rpg-system** repos already carry their own `build-push.yml`
+   (arm64 → ghcr) that also bumps their image pin here on each push — each needs a
+   `PLATFORM_PAT` secret (contents:write on this repo) set in *that* repo. Nothing
+   to add on this side.
+
+   The pin *is* the rollout: Flux watches `main:./k8s` on a one-minute interval,
+   so a bumped tag reaches the node on its own. `50-apps.yml` remains the
+   bootstrap and the manual override, not the usual path.
 4. **DNS + firewall (for public TLS):** A records for `assistant.omarmassfih.no`
    and `backend.omarmassfih.no` → VM public IP, and open **80/443** in ufw **and**
    the OCI security list (needed for the Let's Encrypt HTTP-01 challenge).
