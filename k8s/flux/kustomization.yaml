@@ -1,10 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Deliberately NOT listed in ../kustomization.yaml yet. See README.md — these
-# objects need CRDs that this cluster does not have, and kustomize-controller
-# fails the whole build when a resource has no matching kind. That would stop
-# every app in the repo from reconciling, not just this one.
+# Applied by its own Flux Kustomization (`flux-images` in flux-system), NOT by
+# ../kustomization.yaml. That one sets `namespace: platform`, and kustomize's
+# namespace transformer overrides the namespace a resource declares for itself —
+# so listing this directory there silently moved all three objects into
+# `platform`, where the ImageUpdateAutomation could no longer see the
+# GitRepository it references and failed with "does not exist".
+#
+# The objects have to sit beside the GitRepository they name. A cross-namespace
+# sourceRef is not a thing.
 resources:
   - rpg-system.yaml
   - image-automation.yaml
