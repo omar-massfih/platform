@@ -18,7 +18,8 @@ resources:
   - apps/omarmassfih-backend # notes/chat API; authored notes seed into Postgres at startup
   - apps/rpg-system # rank tracker; own `rpg` database, API + static UI in one image
   - apps/keycloak # platform SSO; own `keycloak` database, admin creds out of band
-  - apps/oauth2-proxy # ForwardAuth for Traefik; owns the OIDC dance for every app
+  - apps/oauth2-proxy
+  - flux # ForwardAuth for Traefik; owns the OIDC dance for every app
 # All images pulled from ghcr, pinned to a build tag. Bump these (and push new
 # images) to roll out a new version; Flux applies the change.
 images:
@@ -35,4 +36,7 @@ images:
   - name: ghcr.io/omar-massfih/omarmassfih.no-backend
     newTag: "sha-2c178f3"
   - name: ghcr.io/omar-massfih/rpg-system
-    newTag: "sha-5b44ebe"
+    # Owned by Flux image automation — see flux/README.md. The marker names the
+    # policy that supplies the value; hand-editing this line works but the next
+    # reconcile puts it back.
+    newTag: "sha-5b44ebe" # {"$imagePolicy": "flux-system:rpg-system:tag"}

@@ -12,14 +12,13 @@ service repo push → CI builds + pushes to ghcr → image-reflector notices the
 Nothing in a service repo needs credentials on this one. That is the point of
 doing it this way rather than with a cross-repo PAT in each service's CI.
 
-**These manifests are not live yet.** `../kustomization.yaml` does not list this
-directory, on purpose: kustomize-controller fails the *entire* build when a
-resource has no matching kind, which would stop every app in this repo from
-reconciling, not just this one. The CRDs exist now (prerequisite 1 below), but
-the two credentials do not, and an automation that cannot push is a
-CRD-shaped way of finding that out. Wire it in last.
+This is live. All three prerequisites below are done and recorded, because none
+of them is guessable from the manifests alone.
 
-Prerequisite 1 is done. **2 and 3 are credentials, and both are outstanding.**
+Order matters if it ever has to be rebuilt: CRDs, then both credentials, then
+wire this directory into `../kustomization.yaml`. Listed before its CRDs exist,
+kustomize-controller fails the *entire* build on the unknown kind and every app
+in this repo stops reconciling — not just this one.
 
 ## Prerequisites
 
@@ -51,15 +50,21 @@ Recorded because none of it is obvious if it has to be done again:
 On API versions: at v2.9.x all three image kinds are `image.toolkit.fluxcd.io/v1`.
 Most writing on this still shows `v1beta2`.
 
-### 2. A registry credential in `flux-system` — outstanding
+### 2. A registry credential in `flux-system` — **done**
 
 The package is private: an anonymous `GET /v2/omar-massfih/rpg-system/tags/list`
-returns 401. The `ghcr` pull secret exists in `platform` for the kubelet;
-image-reflector needs its own copy in `flux-system`. The `ghcr_secret` Ansible
-role creates the first one from `secrets/ghcr.pat` — extend it to both
-namespaces rather than copying the secret by hand.
+returns 401, so image-reflector cannot even list tags without a credential.
 
-### 3. Git write access for Flux — outstanding
+`flux-system/ghcr` is a copy of the `platform/ghcr` pull secret the kubelet
+already uses — copied namespace to namespace, so no new credential was minted.
+
+That copy is the one loose end here: it is imperative, and nothing regenerates
+it. If the ghcr PAT is ever rotated, the `ghcr_secret` Ansible role updates
+`platform` and this copy silently goes stale — the symptom is an ImageRepository
+that 401s while the node still pulls fine. Extending that role to both
+namespaces is the proper fix.
+
+### 3. Git write access for Flux — **done**
 
 This is the part that is easy to assume and wrong here. The `platform`
 GitRepository has **no `secretRef`** — it reads this public repo anonymously, so
@@ -94,21 +99,22 @@ Worth bringing the GitRepository and Kustomization into this repo afterwards, so
 the thing that reconciles everything is not itself the one object nobody can see
 the definition of.
 
-## Enabling
+## How it is wired
 
-Once 2 and 3 are done, two edits:
-
-1. Add `- flux` to `resources:` in `../kustomization.yaml`.
-2. Put the marker comment on the pin the automation should own:
+`- flux` in `../kustomization.yaml`'s `resources:`, and a marker comment on the
+pin the automation owns:
 
 ```yaml
   - name: ghcr.io/omar-massfih/rpg-system
-    newTag: "20260821203300-7707621" # {"$imagePolicy": "flux-system:rpg-system:tag"}
+    newTag: "..." # {"$imagePolicy": "flux-system:rpg-system:tag"}
 ```
 
-The tag has to be one the policy matches — `<14-digit UTC timestamp>-<short
-sha>`. Builds from before the workflow change only carry `sha-` tags, which the
-policy filters out, so the first automated bump lands on the next push.
+Editing that line by hand works until the next reconcile puts it back. To pin
+deliberately — a rollback, say — suspend the automation first:
+
+```bash
+flux suspend image update platform      # or: kubectl -n flux-system annotate                                         # imageupdateautomation platform                                         # reconcile.fluxcd.io/suspend=true
+```
 
 ## Checking it
 
