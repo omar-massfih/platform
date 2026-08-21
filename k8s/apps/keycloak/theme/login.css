@@ -56,6 +56,9 @@
   --jade: #6fd9a6;
   --rust: #ff5a6e;
   --focus: #6fd7ff;
+  /* Pure white, only ever mixed into an accent to lift it toward a sheen —
+     the highlight on the one filled button. Not a surface or a text colour. */
+  --sheen: #ffffff;
 
   /* Text ramp */
   --text: #e6f0fa;
