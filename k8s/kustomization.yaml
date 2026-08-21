@@ -34,8 +34,6 @@ images:
     newTag: "sha-44ebacb" # bumped to a sha- tag by ingest CI on first push
   - name: ghcr.io/omar-massfih/omarmassfih.no-backend
     newTag: "sha-2c178f3"
+  # rpg-system's tag is set by Flux image automation; see flux/README.md.
   - name: ghcr.io/omar-massfih/rpg-system
-    # Owned by Flux image automation — see flux/README.md. The marker names the
-    # policy that supplies the value; hand-editing this line works but the next
-    # reconcile puts it back.
     newTag: "sha-5b44ebe" # {"$imagePolicy": "flux-system:rpg-system:tag"}
