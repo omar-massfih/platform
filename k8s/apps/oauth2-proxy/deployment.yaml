@@ -46,6 +46,10 @@ spec:
             # The application verifies this token itself rather than trusting a
             # header, so a pod inside the cluster cannot forge an identity.
             - --pass-access-token=true
+            # A packaged build has no cookie and cannot follow a redirect. It
+            # presents a bearer token, which the proxy validates against the
+            # provider and turns into the same identity headers a browser gets.
+            - --skip-jwt-bearer-tokens=true
             - --skip-provider-button=true
             - --silence-ping-logging=true
           envFrom:

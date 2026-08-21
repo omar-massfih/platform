@@ -50,21 +50,15 @@ spec:
                 secretKeyRef: { name: rpg-system-session, key: OWNER_PASSWORD_HASH }
             - name: OWNER_USERNAME
               value: omar
-            # Verification only: the issuer to trust and the client the token
-            # must have been issued to. oauth2-proxy holds the secret.
+            # The app does not verify anything: the proxy decides identity and
+            # passes it down. The issuer marks that a provider is in front, and
+            # the client id only addresses the logout endpoint.
             - name: OIDC_ISSUER
               valueFrom:
                 secretKeyRef: { name: rpg-system-oidc, key: OIDC_ISSUER }
             - name: OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef: { name: rpg-system-oidc, key: OIDC_CLIENT_ID }
-            # Keys come from the service next door; the issuer claim is still
-            # checked against the public URL the token was minted with.
-            - name: OIDC_JWKS_URL
-              value: http://keycloak.platform.svc:8080/realms/platform/protocol/openid-connect/certs
-            # REGISTRATION_CODE is deliberately unset: registration stays closed
-            # until a code is added here, which is the right default at a public
-            # URL. Add it as a key on rpg-system-session to open sign-up.
           # The schema is applied and the seed runs during startup, before the
           # pod reports ready. Generous failureThreshold covers a cold CNPG.
           startupProbe:
