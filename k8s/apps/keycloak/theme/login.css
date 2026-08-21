@@ -1,47 +1,82 @@
-/* Generated from the design system. Do not hand-edit: regenerate from
-   frontend/src/design/tokens/* so the login page cannot drift from the
-   product it fronts. */
+/* GENERATED — do not hand-edit above the "Keycloak's base markup" rule.
 
-/* Three Google-hosted families, exactly as the app loads them:
-   Cinzel (display / rank marks), Rajdhani (UI sans), Share Tech Mono (numerals).
+   Rebuild with:  python tools/sync_login_theme.py   (in the rpg-system repo)
+
+   The token layer below is emitted verbatim from the product's design system so
+   the login page cannot drift from the thing it fronts. Edit the tokens there.
+   Everything below the boundary comment is hand-written and is preserved. */
+
+/* ── from tokens/fonts.css ── */
+/* Two Google-hosted families.
+
+   Chakra Petch carries everything with a voice — rank marks, headings, labels,
+   buttons. It is squarish and slightly technical, which is the register a status
+   window speaks in; the engraved serif it replaces read as a certificate, which
+   is a different idea about what this thing is.
+
+   IBM Plex Mono carries the figures, because numbers in a column have to line up
+   and a changing digit must not shift its neighbours.
+
    No binaries are vendored — the app links the Google CSS API, so the design
-   system does the same to stay byte-identical to production. */
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap");
+   system does the same and stays byte-identical to production. */
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
+/* ── from tokens/colors.css ── */
 /* ── Colour ────────────────────────────────────────────────────────────────
-   Dark is the native world: a lit panel floating over a near-black ground.
-   Every value below is lifted verbatim from frontend/src/styles.css.
-   The light scope is an ADDITION to the product (documented in readme.md):
-   the same panel, lit from in front instead of behind. */
+   Dark is the native world: a lit panel floating over near-black. The values
+   are the ones the mobile design specifies — a sharper cyan than before, a
+   warmer gold, and a hotter red for failure.
+
+   Every pairing below clears AA against the surfaces it actually sits on;
+   tools/design_check.py recomputes it rather than trusting this comment. The
+   light scope is the same panel lit from in front, and its accents are darkened
+   until they hold on paper — a cyan that glows on black is illegible on white. */
 
 :root {
   color-scheme: dark;
 
   /* Ground — the world behind the glass */
-  --ground: #05080f;
-  --ground-2: #080d1a;
+  --ground: #04060b;
+  --ground-2: #070b14;
 
   /* Panel fields */
-  --panel: rgba(11, 19, 38, 0.88);
-  --panel-2: rgba(16, 27, 50, 0.75);
-  --raised: rgba(28, 45, 76, 0.85);
+  --panel: rgba(10, 17, 30, 0.88);
+  --panel-2: rgba(14, 23, 40, 0.75);
+  --raised: rgba(24, 39, 64, 0.85);
 
   /* Edges and light */
-  --edge: rgba(103, 176, 214, 0.38);
-  --edge-soft: rgba(103, 176, 214, 0.16);
-  --glow: rgba(127, 227, 255, 0.14);
+  --edge: rgba(111, 215, 255, 0.22);
+  --edge-soft: rgba(111, 215, 255, 0.12);
+  --glow: rgba(111, 215, 255, 0.14);
+  --bracket: #6fd7ff;
 
   /* Accents */
-  --cyan: #7fe3ff;
-  --gold: #f2c879;
+  --cyan: #6fd7ff;
+  --gold: #ffcf6b;
   --jade: #6fd9a6;
-  --rust: #ff9a86;
-  --focus: #7fe3ff;
+  --rust: #ff5a6e;
+  --focus: #6fd7ff;
 
   /* Text ramp */
-  --text: #e9f3fa;
-  --text-2: #b3cbdc;
-  --text-3: #8fa9bf;
+  --text: #e6f0fa;
+  --text-2: #8fa2ba;
+  --text-3: #7c8ba3;
+
+  /* Tracks — the unfilled part of a meter, a day cell, a gate segment */
+  --track: rgba(111, 215, 255, 0.1);
+  --track-quiet: rgba(111, 215, 255, 0.07);
+  --track-day: rgba(111, 215, 255, 0.09);
+  --wash: rgba(111, 215, 255, 0.05);
+
+  /* Surface texture: a faint rule grid and the scanline that sweeps it */
+  --scanline: rgba(111, 215, 255, 0.025);
+  --sweep: rgba(111, 215, 255, 0.05);
+  --grid-line: rgba(111, 215, 255, 0.045);
+  --grid-size: 26px;
+
+  --page-glow-1: rgba(30, 72, 120, 0.32);
+  --page-glow-2: rgba(12, 26, 48, 0.28);
+  --backdrop: rgba(3, 5, 10, 0.8);
 
   /* Semantic aliases — prefer these in new work */
   --surface-page: var(--ground);
@@ -57,16 +92,6 @@
   --accent-value: var(--gold);
   --state-good: var(--jade);
   --state-bad: var(--rust);
-
-  /* Fills used inside meters, strips and gates */
-  --track: rgba(127, 227, 255, 0.1);
-  --track-quiet: rgba(127, 227, 255, 0.07);
-  --track-day: rgba(127, 227, 255, 0.09);
-  --wash: rgba(127, 227, 255, 0.06);
-  --scanline: rgba(127, 227, 255, 0.014);
-  --page-glow-1: #0e1a30;
-  --page-glow-2: #0a1526;
-  --backdrop: rgba(3, 6, 12, 0.78);
 }
 
 [data-theme="light"] {
@@ -79,40 +104,86 @@
   --panel-2: rgba(233, 240, 247, 0.8);
   --raised: rgba(255, 255, 255, 0.92);
 
-  --edge: rgba(24, 66, 92, 0.34);
-  --edge-soft: rgba(24, 66, 92, 0.14);
-  --glow: rgba(14, 116, 144, 0.12);
+  --edge: rgba(11, 96, 118, 0.3);
+  --edge-soft: rgba(11, 96, 118, 0.13);
+  --glow: rgba(11, 96, 118, 0.12);
+  --bracket: #0b6076;
 
-  --cyan: #0e7490;
-  --gold: #9a6708;
+  /* Darkened until each holds on paper. The gold especially: the value it had
+     measured 4.21:1 on the ground while carrying 13px counters. */
+  --cyan: #0b6076;
+  --gold: #8a5c07;
   --jade: #10795a;
-  --rust: #b3392a;
-  --focus: #0e7490;
+  --rust: #ad2334;
+  --focus: #0b6076;
 
   --text: #0b1524;
   --text-2: #33506a;
-  --text-3: #5d7d96;
+  --text-3: #4d6a84;
 
-  --track: rgba(14, 116, 144, 0.14);
-  --track-quiet: rgba(14, 116, 144, 0.09);
-  --track-day: rgba(14, 116, 144, 0.12);
-  --wash: rgba(14, 116, 144, 0.07);
-  --scanline: rgba(14, 116, 144, 0.012);
-  --page-glow-1: #ffffff;
-  --page-glow-2: #dce7f2;
+  --track: rgba(11, 96, 118, 0.14);
+  --track-quiet: rgba(11, 96, 118, 0.09);
+  --track-day: rgba(11, 96, 118, 0.12);
+  --wash: rgba(11, 96, 118, 0.07);
+
+  --scanline: rgba(11, 96, 118, 0.012);
+  --sweep: rgba(11, 96, 118, 0.028);
+  --grid-line: rgba(11, 96, 118, 0.05);
+  --grid-size: 26px;
+
+  --page-glow-1: rgba(255, 255, 255, 0.9);
+  --page-glow-2: rgba(220, 231, 242, 0.6);
   --backdrop: rgba(196, 210, 224, 0.78);
 }
 
-/* ── Type ──────────────────────────────────────────────────────────────────
-   Three voices, never mixed inside one string:
-   display  Cinzel        — rank marks, level figure, dialog + section titles
-   sans     Rajdhani      — every label, name and body line
-   mono     Share Tech Mono — anything the system measured: counts, dates, units */
+/* ── from tokens/ranks.css ── */
+/* ── The rank ramp ─────────────────────────────────────────────────────────
+   Seven ranks, F→S. Dim slate wakes to cyan, hardens to gold, ends radiant.
+   The ramp is the single most identifying colour decision in the product:
+   never re-hue it, never add a rank, never reuse these outside rank marks.
+
+   C is the exception that proves it: it is not an independent hue but the
+   system cyan itself, so it tracks --cyan whenever that moves. A C mark sits
+   beside cyan chrome constantly, and two nearly-equal blues read as a mistake. */
 
 :root {
-  --display: "Cinzel", Georgia, serif;
-  --sans: "Rajdhani", "Segoe UI", system-ui, sans-serif;
-  --mono: "Share Tech Mono", ui-monospace, Consolas, monospace;
+  --r-F: #5e7286;
+  --r-E: #7b96ac;
+  --r-D: #9dbed2;
+  --r-C: #6fd7ff;
+  --r-B: #ffd98a;
+  --r-A: #ffb03a;
+  --r-S: #ffffff;
+}
+
+/* On light ground "radiant" cannot be white, so S inverts to deepest ink and
+   the cool ranks darken enough to hold contrast on paper. */
+[data-theme="light"] {
+  --r-F: #75879a;
+  --r-E: #5b7c92;
+  --r-D: #3d6d8b;
+  --r-C: #0b6076;
+  --r-B: #a97c12;
+  --r-A: #b9660c;
+  --r-S: #0b1524;
+}
+
+/* ── from tokens/typography.css ── */
+/* ── Type ──────────────────────────────────────────────────────────────────
+   Two families doing three jobs, never mixed inside one string:
+   display  Chakra Petch 600 — rank marks, level figure, dialog + section titles
+   sans     Chakra Petch     — every label, name and body line
+   mono     IBM Plex Mono    — anything the system measured: counts, dates, units
+
+   Display and sans are the same face at different weights and tracking. That is
+   deliberate: the engraved serif this replaces read as a certificate, and a
+   status window is not a certificate — it is an instrument panel, and an
+   instrument panel is set in one voice. */
+
+:root {
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --sans: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
@@ -125,8 +196,8 @@
   --fs-level: clamp(3rem, 11vw, 4.5rem);
 
   /* Rank-mark sizes by context */
-  --fs-mark-attr: 2.75rem;
-  --fs-mark-sheet: 1.875rem;
+  --fs-mark-attr: 2.9rem;
+  --fs-mark-sheet: 2rem;
   --fs-mark-skill: 1.25rem;
 
   --lh-body: 1.5;
@@ -140,9 +211,10 @@
   --ls-btn: 0.1em;
   --ls-tag: 0.14em;
   --ls-eyebrow: 0.42em;
-  --ls-display: 0.04em;
+  --ls-display: 0.06em;
 }
 
+/* ── from tokens/spacing.css ── */
 /* ── Space ─────────────────────────────────────────────────────────────────
    Values taken from the app, not snapped to a 4px grid: the panels really do
    pad 0.9rem / 1.25rem and the stack gap really is fluid. */
@@ -180,6 +252,7 @@
   --day-h: 12px;
 }
 
+/* ── from tokens/elevation.css ── */
 /* ── Frame and elevation ───────────────────────────────────────────────────
    Nothing here casts a soft drop shadow onto a page. A panel is a lit window:
    a hard 1px seat against the ground, an outward glow, and an inner top
@@ -227,10 +300,49 @@
   --glow-mark: 0 0 0 currentColor;
 }
 
+/* ── from tokens/motion.css ── */
+/* ── Motion ────────────────────────────────────────────────────────────────
+   Two speeds and one ambience. Controls answer instantly (0.14s, colour/border/
+   glow — never size). Moments are staged: the ground darkens, the frame opens
+   on a horizontal wipe, a light sweeps once, then the new rank arrives.
+
+   The ambience is the page's own scan, and it is the only thing here that never
+   stops. It is deliberately slower than anything a reader would track and faint
+   enough to sit under text — a screen that is on, not an animation. It is cut
+   entirely under reduced motion; perpetual motion is precisely what that
+   preference is about. */
+
+:root {
+  --dur-control: 0.14s;
+  --dur-toast: 0.32s;
+  --dur-panel: 0.42s;
+  --dur-arrive: 0.5s;
+  --dur-sweep: 0.9s;
+  --dur-ambient: 12s;
+  --hold-rankup: 3200ms;
+
+  --ease-out: ease-out;
+  --ease-open: cubic-bezier(0.16, 0.9, 0.3, 1);
+  --ease-overshoot: cubic-bezier(0.16, 1.2, 0.3, 1);
+
+  /* Stagger used by the rank-up sequence */
+  --delay-eyebrow: 0.3s;
+  --delay-skill: 0.38s;
+  --delay-from: 0.46s;
+  --delay-arrow: 0.52s;
+  --delay-to: 0.6s;
+  --delay-hint: 1.4s;
+}
+
+/* ── from tokens/base.css ── */
 /* ── Base ──────────────────────────────────────────────────────────────────
-   The page itself: two radial lights over the ground, plus a barely-there
-   scanline so the surface reads as a screen. Every colour is painted
-   explicitly; nothing is inherited from the host. */
+   The page itself, in four layers: two radial lights, a ruled grid, the ground
+   under all of it, and above everything a scanline with a single slow band
+   travelling down it. Every colour is painted explicitly; nothing is inherited
+   from the host.
+
+   The grid lives in the background stack rather than a pseudo-element, so it
+   can never end up over content no matter how a panel stacks itself. */
 
 *,
 *::before,
@@ -252,6 +364,16 @@ body {
   background:
     radial-gradient(1100px 620px at 50% -10%, var(--page-glow-1) 0%, transparent 70%),
     radial-gradient(800px 500px at 90% 110%, var(--page-glow-2) 0%, transparent 65%),
+    repeating-linear-gradient(
+      to right,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-size)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-size)
+    ),
     var(--ground);
   background-attachment: fixed;
   min-height: 100vh;
@@ -270,6 +392,29 @@ body::after {
     transparent 1px,
     transparent 3px
   );
+}
+
+/* The scan. One soft band, twelve seconds top to bottom, well under the
+   contrast of anything it crosses. */
+body::before {
+  content: "";
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: 40vh;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to bottom, transparent, var(--sweep), transparent);
+  animation: page-scan var(--dur-ambient) linear infinite;
+}
+
+@keyframes page-scan {
+  from {
+    transform: translateY(-40vh);
+  }
+  to {
+    transform: translateY(100vh);
+  }
 }
 
 :focus-visible {
@@ -295,8 +440,13 @@ a:hover {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
-}
 
+  /* Collapsing the duration would park the band somewhere instead of removing
+     it, which is not what the preference asks for. */
+  body::before {
+    display: none;
+  }
+}
 
 /* ── Keycloak's base markup, wearing the signin pattern ──────────────────── */
 
