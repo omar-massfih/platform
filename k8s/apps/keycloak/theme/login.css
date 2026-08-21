@@ -48,7 +48,6 @@
   --edge: rgba(111, 215, 255, 0.22);
   --edge-soft: rgba(111, 215, 255, 0.12);
   --glow: rgba(111, 215, 255, 0.14);
-  --bracket: #6fd7ff;
 
   /* Accents */
   --cyan: #6fd7ff;
@@ -110,7 +109,6 @@
   --edge: rgba(11, 96, 118, 0.3);
   --edge-soft: rgba(11, 96, 118, 0.13);
   --glow: rgba(11, 96, 118, 0.12);
-  --bracket: #0b6076;
 
   /* Darkened until each holds on paper. The gold especially: the value it had
      measured 4.21:1 on the ground while carrying 13px counters. */
@@ -237,19 +235,23 @@
   --space-12: 2.25rem;
   --space-13: 3rem;
 
-  /* Panel padding: cards use 1.25rem inline, the sheet 1.5rem */
-  --pad-card: 0.9rem 1.25rem 1rem;
-  --pad-card-x: 1.25rem;
-  --pad-sheet-x: 1.5rem;
+  /* Panel padding: cards use 1.25rem inline, the sheet 1.5rem — and give a
+     little of it back on a narrow screen, which is what four separate
+     max-width rules used to do one file at a time. */
+  --pad-card: 0.9rem var(--pad-card-x) 1rem;
+  --pad-card-x: clamp(1rem, 3vw, 1.25rem);
+  --pad-sheet-x: clamp(1rem, 3.5vw, 1.5rem);
 
-  /* Layout */
-  --shell-max: 900px;
+  /* Layout. In rem so the measure tracks the user's font size; 56.25rem is the
+     900px this was, at the default size. --shell-max-wide lives in
+     breakpoints.css with the other width answers. */
+  --shell-max: 56.25rem;
   --shell-pad-block: clamp(1.5rem, 4vw, 3rem);
   --shell-pad-inline: clamp(0.875rem, 4vw, 2rem);
   --stack-gap: clamp(1.25rem, 3vw, 1.75rem);
 
   --radius: 2px;
-  --bracket: 13px;
+  --bracket-size: 13px;
   --meter-h: 10px;
   --meter-h-muted: 4px;
   --day-h: 12px;
@@ -345,7 +347,12 @@
    from the host.
 
    The grid lives in the background stack rather than a pseudo-element, so it
-   can never end up over content no matter how a panel stacks itself. */
+   can never end up over content no matter how a panel stacks itself.
+
+   The stack is painted on the root element, not on body. A fixed attachment on
+   the root propagates to the canvas and takes the browser's optimised path; the
+   same declaration on a non-root box makes every scroll frame repaint it. The
+   result on screen is identical. */
 
 *,
 *::before,
@@ -355,15 +362,6 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: var(--fs-md);
-  line-height: var(--lh-body);
-  -webkit-font-smoothing: antialiased;
   background:
     radial-gradient(1100px 620px at 50% -10%, var(--page-glow-1) 0%, transparent 70%),
     radial-gradient(800px 500px at 90% 110%, var(--page-glow-2) 0%, transparent 65%),
@@ -379,7 +377,19 @@ body {
     ),
     var(--ground);
   background-attachment: fixed;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  /* min-height, never height: the frame may grow past the viewport but must
+     never shrink when a mobile browser collapses its chrome. */
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body::after {
@@ -404,7 +414,7 @@ body::before {
   position: fixed;
   inset-inline: 0;
   top: 0;
-  height: 40vh;
+  height: 40lvh;
   pointer-events: none;
   z-index: 1;
   background: linear-gradient(to bottom, transparent, var(--sweep), transparent);
@@ -413,10 +423,10 @@ body::before {
 
 @keyframes page-scan {
   from {
-    transform: translateY(-40vh);
+    transform: translateY(-40lvh);
   }
   to {
-    transform: translateY(100vh);
+    transform: translateY(100lvh);
   }
 }
 
@@ -431,9 +441,11 @@ a {
   border-bottom: 1px solid var(--edge);
 }
 
-a:hover {
-  color: var(--text);
-  border-bottom-color: var(--cyan);
+@media (hover: hover) {
+  a:hover {
+    color: var(--text);
+    border-bottom-color: var(--cyan);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
