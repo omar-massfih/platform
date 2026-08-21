@@ -35,4 +35,4 @@ images:
   - name: ghcr.io/omar-massfih/omarmassfih.no-backend
     newTag: "sha-2c178f3"
   - name: ghcr.io/omar-massfih/rpg-system
-    newTag: "sha-573d15f"
+    newTag: "sha-bd59612"
