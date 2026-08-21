@@ -139,3 +139,32 @@ An `ImageRepository` + `ImagePolicy` pair here, and a marker comment on its pin.
 The `ImageUpdateAutomation` is repo-wide and does not change. Note that the
 service's build must emit an orderable tag for the policy to have anything to
 sort — see the comment in `rpg-system.yaml`.
+
+## Node headroom
+
+The node is 2 CPU and was already at 1700m of requests. The two controllers ship
+asking 100m each, which took it to exactly 2000m — 100% — and the next thing to
+need a pod could not schedule. That surfaced as a *rolling update* failing:
+a single-replica Deployment surges to two pods, and there was no room for the
+second, so `rollout status` timed out with the old pod still serving.
+
+Both are patched down to `cpu: 25m` (they are event-driven and idle between
+scans) and to `maxSurge: 0`, so replacing them never needs two at once. That
+leaves ~150m of headroom. Worth watching: at 92% requested, this cluster is one
+modest addition away from the same failure, and the symptom points at the app
+being rolled rather than at whatever consumed the margin.
+
+## What is imperative here
+
+These are not in git, and will revert if the controllers are reinstalled from
+the release manifests:
+
+- the `cpu: 25m` request and `maxSurge: 0` above,
+- the images repointed from Docker Hub to ghcr,
+- the `flux-images` Kustomization that applies this directory,
+- the GitRepository's SSH url and `secretRef`.
+
+The last two are the same gap the GitRepository and the `platform` Kustomization
+already have — Flux was installed out of band, so the objects that reconcile
+everything else are the ones with no definition in the repo. Bringing them in is
+the obvious next tidy-up.
