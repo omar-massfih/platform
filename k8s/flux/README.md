@@ -133,3 +133,5 @@ An `ImageRepository` + `ImagePolicy` pair here, and a marker comment on its pin.
 The `ImageUpdateAutomation` is repo-wide and does not change. Note that the
 service's build must emit an orderable tag for the policy to have anything to
 sort — see the comment in `rpg-system.yaml`.
+
+# touch: force a fresh automation run
