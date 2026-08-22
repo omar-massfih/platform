@@ -14,3 +14,4 @@ configMapGenerator:
     files:
       - theme/theme.properties
       - theme/login.css
+      - theme/messages/messages_no.properties

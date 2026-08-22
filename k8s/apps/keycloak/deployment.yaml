@@ -85,8 +85,9 @@ spec:
             capabilities:
               drop: ["ALL"]
 
-          # Two files into two directories, so the theme folder has the shape
-          # Keycloak expects: properties at the root, stylesheet under resources.
+          # Three files into three directories, so the theme folder has the shape
+          # Keycloak expects: properties at the root, stylesheet under resources,
+          # message overrides under messages.
           volumeMounts:
             - name: theme
               mountPath: /opt/keycloak/themes/system/login/theme.properties
@@ -95,6 +96,10 @@ spec:
             - name: theme
               mountPath: /opt/keycloak/themes/system/login/resources/css/login.css
               subPath: login.css
+              readOnly: true
+            - name: theme
+              mountPath: /opt/keycloak/themes/system/login/messages/messages_no.properties
+              subPath: messages_no.properties
               readOnly: true
 
       volumes:

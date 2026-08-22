@@ -508,6 +508,13 @@ body {
 #kc-content-wrapper::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
 #kc-content-wrapper::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
+/* Turning the realm's locales on makes base render a language menu — a bare
+   button and a list that is always open, because the markup carries no classes
+   for the theme to collapse it with. The browser's own Accept-Language already
+   picks between the two, and `?kc_locale=en` still forces the other, so the
+   control is noise on the way in. */
+#kc-locale { display: none; }
+
 /* The realm is an implementation detail of the identity provider. "Platform"
    over the card named the database this account lives in, which is not a thing
    anybody signing in has any use for. */
