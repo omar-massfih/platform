@@ -104,8 +104,8 @@ spec:
               subPath: theme.properties
               readOnly: true
             - name: theme
-              mountPath: /opt/keycloak/themes/system/login/resources/css/login.css
-              subPath: login.css
+              mountPath: /opt/keycloak/themes/system/login/resources/css/signin.css
+              subPath: signin.css
               readOnly: true
 
       volumes:

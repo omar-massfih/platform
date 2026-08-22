@@ -13,4 +13,4 @@ configMapGenerator:
   - name: keycloak-theme
     files:
       - theme/theme.properties
-      - theme/login.css
+      - theme/signin.css
