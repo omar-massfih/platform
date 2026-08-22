@@ -255,6 +255,10 @@
   --meter-h: 10px;
   --meter-h-muted: 4px;
   --day-h: 12px;
+  /* The strip under a skill's meter. An activity row and a reading beside a
+     sparkline are not the same height on their own, so the slot is stated once
+     and both fill it — the sparkline's own height, which is the taller. */
+  --strip-h: 34px;
 }
 
 /* ── from tokens/elevation.css ── */
@@ -473,9 +477,16 @@ body {
 }
 
 /* base wraps the whole card in #kc-content-wrapper. */
+/* `margin-inline: auto` is not decoration. body centres its one flex item, and
+   that item is shrink-to-fit: when Keycloak adds "Invalid username or password."
+   the sentence widens the item past the card, and the card — a plain block —
+   stayed flush left inside it while the header and title, which centre their
+   own text, still looked centred. The card now centres against whatever width
+   it is given. */
 #kc-content-wrapper {
   position: relative;
   z-index: 2;
+  margin-inline: auto;
   width: min(21rem, 100%);
   background: var(--panel);
   border: 1px solid var(--edge);
@@ -496,6 +507,11 @@ body {
 }
 #kc-content-wrapper::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
 #kc-content-wrapper::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* The realm is an implementation detail of the identity provider. "Platform"
+   over the card named the database this account lives in, which is not a thing
+   anybody signing in has any use for. */
+#kc-header { display: none; }
 
 #kc-header, #kc-header-wrapper {
   text-align: center;
@@ -571,12 +587,26 @@ input[type="submit"]:hover, button[type="submit"]:hover {
     color-mix(in srgb, var(--cyan) 16%, transparent));
 }
 
-/* Keycloak states its own errors. They stay in the error colour and stay read. */
-#kc-error-message, .kc-feedback-text, .pf-c-alert__title, .alert-error, .input-error {
+/* Keycloak states its own errors. They stay in the error colour and stay read.
+   The per-field one is `id="input-error"`, not a class — matching only the class
+   left it as an unstyled inline span, which is what widened the page. */
+#kc-error-message, #input-error, .kc-feedback-text, .pf-c-alert__title, .alert-error, .input-error {
   margin-bottom: var(--space-8);
   color: var(--rust);
   font-size: var(--fs-sm);
 }
+#input-error {
+  display: block;
+  /* Under the field it belongs to, taking the space the field's own margin
+     would have used rather than adding to it. */
+  margin-top: calc(var(--space-7) * -1 + var(--space-2));
+}
+
+/* base ships a show/hide password button with no icon and no visible label —
+   its only affordance is an aria-label the JS swaps. It rendered as the browser's
+   default grey box above Sign In, and a control whose state cannot be read is
+   worse than no control. Hidden until the theme has an icon to give it. */
+button[data-password-toggle] { display: none; }
 
 a { color: var(--cyan); }
 #kc-form-options, #kc-registration, #kc-info { font-size: var(--fs-sm); color: var(--text-2); }
