@@ -508,13 +508,11 @@ body {
 #kc-content-wrapper::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
 #kc-content-wrapper::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
-/* Turning the realm's locales on makes base render a language menu — a bare
-   button and a list that is always open, because the markup carries no classes
-   for the theme to collapse it with. The browser's own Accept-Language already
-   picks between the two — an English browser gets the English page without
-   asking — and `?ui_locales=en` forces it. (Not `kc_locale`: that one is read on
-   the login-actions URLs, and the authorisation endpoint ignores it.) So the
-   control is noise on the way in. */
+/* The realm speaks one language, so Keycloak renders no language menu and this
+   rule matches nothing. It is kept because base draws that menu as a bare button
+   over a list that is always open — the markup carries no classes for a theme to
+   collapse it with — so the day a second locale is added it would appear on the
+   login page fully unstyled, which is exactly how it arrived the first time. */
 #kc-locale { display: none; }
 
 /* The realm is an implementation detail of the identity provider. "Platform"
