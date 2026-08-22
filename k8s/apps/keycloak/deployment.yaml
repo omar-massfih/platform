@@ -51,6 +51,17 @@ spec:
             - name: KC_HEALTH_ENABLED
               value: "true"
 
+            # Theme resources are served from /resources/<build-id>/..., and that
+            # id is Keycloak's own build version — it does not change when the
+            # theme does. With the default thirty-day max-age, an edited
+            # stylesheet stayed invisible to anyone who had opened the page
+            # before, while realm settings (which are not cached) took effect at
+            # once: turning the locales on rendered a new language menu against a
+            # stylesheet too old to have a rule for it. One small file on a login
+            # page is not worth a cache that lies.
+            - name: KC_SPI_THEME_STATIC_MAX_AGE
+              value: "-1"
+
             # First-boot admin only. Once a real admin account exists this pair
             # can be dropped from the secret and the deployment.
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
