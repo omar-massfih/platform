@@ -511,7 +511,9 @@ body {
 /* Turning the realm's locales on makes base render a language menu — a bare
    button and a list that is always open, because the markup carries no classes
    for the theme to collapse it with. The browser's own Accept-Language already
-   picks between the two, and `?kc_locale=en` still forces the other, so the
+   picks between the two — an English browser gets the English page without
+   asking — and `?ui_locales=en` forces it. (Not `kc_locale`: that one is read on
+   the login-actions URLs, and the authorisation endpoint ignores it.) So the
    control is noise on the way in. */
 #kc-locale { display: none; }
 
