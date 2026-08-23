@@ -110,6 +110,12 @@
   --dye-violet: #8f6fd7;
   --dye-dusk: #5c7fb8;
   --dye-sand: #d9a441;
+  --dye-blood: #d7263d;
+  --dye-rose: #e77fa3;
+  --dye-tide: #3aa8a0;
+  --dye-gold: #f5d76e;
+  --dye-slate: #9aa7b8;
+  --dye-ash: #b8b2a8;
 }
 
 [data-theme="light"] {
