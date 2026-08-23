@@ -36,4 +36,4 @@ images:
     newTag: "sha-2c178f3"
   # rpg-system's tag is set by Flux image automation; see flux/README.md.
   - name: ghcr.io/omar-massfih/rpg-system
-    newTag: "20260823105856-f0400e6" # {"$imagepolicy": "flux-system:rpg-system:tag"}
+    newTag: "20260823110724-0fbdf7c" # {"$imagepolicy": "flux-system:rpg-system:tag"}
