@@ -80,7 +80,13 @@
   --page-glow-2: rgba(12, 26, 48, 0.28);
   --backdrop: rgba(3, 5, 10, 0.8);
 
-  /* Semantic aliases — prefer these in new work */
+  /* The names the patterns use. Everything above is a palette — what the
+     colour is — and everything below is a role — what it is for. A pattern that
+     reaches past these to the raw name is claiming a colour rather than a
+     meaning, and the gate rejects it, because the day the panel stops being
+     --panel is the day every raw reference is a search-and-replace instead of
+     one edit here. The raw names stay reachable in this file, which is the one
+     place that is allowed to know both. */
   --surface-page: var(--ground);
   --surface-panel: var(--panel);
   --surface-inset: var(--panel-2);
