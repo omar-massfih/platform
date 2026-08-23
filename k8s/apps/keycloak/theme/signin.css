@@ -100,6 +100,16 @@
   --accent-value: var(--gold);
   --state-good: var(--jade);
   --state-bad: var(--rust);
+
+  /* The dyes a character may walk in — washed over sprite art, never carrying
+     text, so they hold in both themes and stay out of the contrast rules. One
+     name per dye the profile offers; the game reads them off the canvas. */
+  --dye-ember: #ff7a45;
+  --dye-frost: #7ad6ff;
+  --dye-moss: #69c96b;
+  --dye-violet: #8f6fd7;
+  --dye-dusk: #5c7fb8;
+  --dye-sand: #d9a441;
 }
 
 [data-theme="light"] {
