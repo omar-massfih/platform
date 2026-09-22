@@ -1,143 +1,84 @@
 # platform
 
-Infrastructure for the **omar** VM: single-node **k3s**, images on **ghcr.io**, and
-**Ansible** to bootstrap the cluster and migrate every service off Docker
-Compose / systemd into Kubernetes.
+Infrastructure for the omar VM, running single-node k3s. The frontend at
+https://omarmassfih.no is hosted separately (GitHub Pages behind Cloudflare).
 
-## What runs here
+## Retained services
 
-| Service | Exposure | Notes |
-|---|---|---|
-| agentic-assistent | **public** `https://assistant.omarmassfih.no` (Traefik + TLS) | FastAPI :8000. PVCs: memory (prod state), models. External Neon Postgres. |
-| chatgpt-proxy | ClusterIP `chatgpt-proxy.platform.svc:8765` | OpenAI-compat proxy over Codex. Shares the codex-auth PVC. |
-| chatgpt-browser | ClusterIP `chatgpt-browser.platform.svc:8766` | Headless-browser → OpenAI bridge (chromium). |
-| pr-pilot | none (outbound Telegram + git) | Ships features to wakiru. State + workspace PVCs. |
-| pr-pilot-omarmassfih | none | Same image, omarmassfih.no group config. |
-| postgres (CNPG) | ClusterIP `pg-rw.platform.svc:5432` | CloudNativePG `Cluster`, single instance. Read/write store for the ingest/dlt pipelines. Auto-generated creds in Secret `pg-app`, DB `ingest`. |
-| ingest | none (Deployment) | dlt orchestrator from the `ingest` repo → Postgres; schedules live in its source YAMLs. Creds injected from `pg-app`. Image tag auto-bumped here by the ingest repo's build-push CI. |
-| omarmassfih-backend | **public** `https://backend.omarmassfih.no` (Traefik + TLS) | Notes and chat API. Authored notes and local FastEmbed vectors are synchronized into cluster-local Postgres before rollout; embeddings refresh hourly without Vercel. |
-| rpg-system | **public** `https://rpg.omarmassfih.no` (Traefik + TLS) | Rank tracker from the `rpg-system` repo; API + static UI in one image. Own CNPG database `rpg`. Image tag to be bumped here by Flux image automation — see `k8s/flux/`. BasicAuth middleware ships disabled — see that app's `ingress.yaml`. |
+| Service | Purpose |
+|---|---|
+| omarmassfih-backend | Notes/chat API at https://backend.omarmassfih.no; hourly embedding refresh |
+| rpg-system | RPG at https://rpg.omarmassfih.no |
+| keycloak | Identity provider at https://auth.omarmassfih.no |
+| oauth2-proxy | Authenticated gateway between RPG ingress and the RPG service |
+| pg | Shared CloudNativePG Postgres for backend, RPG and Keycloak |
 
-All apps run in namespace `platform`. Agentic-assistent and omarmassfih-backend
-have public HTTP APIs. The proxy, browser and both pr-pilot bots stay
-cluster-internal. Postgres is a cluster-internal data store (CloudNativePG); its
-operator lives in `cnpg-system`, the DB itself in `platform`.
+Keep k3s, Traefik, cert-manager, CloudNativePG, Flux, DNS, storage and VPN access:
+these support the retained applications. The backend uses `pg-app` and the
+existing database/role named `ingest`; that name does not mean the ingestion
+service is still required. Do not rename or recreate the database during cleanup.
 
-## How a change reaches the node
+## Deployment
 
-**Flux**, in `flux-system`, watches this repo's `main` branch and applies `./k8s`
-with `prune: true` — a one-minute poll on the git source, ten minutes on the
-kustomization. Nothing here is deployed by pushing to the cluster; it is deployed
-by merging to `main`.
+Flux watches `main` and reconciles `k8s/` with pruning enabled. Merging or pushing
+a change to `main` deploys it and removes resources no longer declared there.
+RPG image automation is reconciled separately from `k8s/flux/` by `flux-images`.
+The backend image pin is updated by its service CI.
 
-So the whole path for a service change is:
-
-```
-service repo push → build-push CI → ghcr image
-                                  → `newTag` bumped here (by that repo's CI, or by
-                                     Flux image automation — see k8s/flux/)
-                                  → Flux → rolling update
+```bash
+kubectl kustomize k8s
+kubectl kustomize k8s/flux
 ```
 
-`ansible/playbooks/50-apps.yml` does the same apply by hand. It is the bootstrap
-and the break-glass, not the everyday route — and reaching for `kubectl set image`
-directly only creates drift that Flux will undo on its next reconcile.
+## Layout and bootstrap
 
-## Layout
+- `terraform/`: OCI VM and network provisioning.
+- `ansible/`: k3s, disk guard, TLS, Postgres operator, image credentials and apps.
+- `k8s/apps/`: backend, RPG, Keycloak and its authentication proxy.
+- `k8s/platform/`: namespace and shared Postgres cluster.
+- `k8s/retained-data/`: offline storage from retired services.
+- `k8s/flux/`: RPG image automation.
+- `secrets/`: optional backend credential template and credential instructions.
 
-```
-ansible/    inventory, group_vars, site.yml, playbooks 00–99, roles
-k8s/        kustomize: platform/ (ns, codex-auth PVC, CNPG postgres) + apps/<svc>/
-ci-templates/build-push.yml   arm64 → ghcr workflow to drop into each service repo
-dockerfiles/                  reference Dockerfiles for services that lack one
-scripts/push-from-vm.sh       build+push from the arm64 VM (no-GitHub services)
-secrets/                      git-ignored env/creds + *.example templates
-```
-
-## One-time prerequisites
-
-1. **Local tools:** `ansible`, `kubectl`, `kustomize`, the `kubernetes.core` collection
-   (`ansible-galaxy collection install kubernetes.core`). VPN up so `ssh omar` works.
-2. **Secrets** (`secrets/`, git-ignored — see `secrets/README.md`): copy each
-   `*.example` and fill in. Also drop in `codex-auth.json` (copy of the VM's
-   `~/.codex/auth.json`) and `ghcr.pat` (a PAT with `read:packages`).
-3. **Images:** add `ci-templates/build-push.yml` to `agentic-assistent` (wakiru) and
-   `pr-pilot` repos (edit `IMAGE` per repo). For `chatgpt-proxy` / `chatgpt-browser`
-   (no GitHub remote) either create repos or build from the VM:
-   `./scripts/push-from-vm.sh chatgpt-proxy '~/chatgpt-openai-proxy' dockerfiles/chatgpt-proxy.Dockerfile`
-   The **ingest** repo carries its own `build-push.yml` (arm64 → ghcr) that also
-   bumps its image pin here on each push — it needs a `PLATFORM_PAT` secret
-   (contents:write on this repo) set in *that* repo.
-
-   **rpg-system** is moving to the other arrangement: its CI only builds, and
-   Flux watches ghcr and writes the pin here itself, so no service repo needs a
-   credential on this one. See `k8s/flux/README.md` — the manifests are written
-   but not yet wired in, and three prerequisites are listed there.
-4. **DNS + firewall (for public TLS):** A records for `assistant.omarmassfih.no`
-   and `backend.omarmassfih.no` → VM public IP, and open **80/443** in ufw **and**
-   the OCI security list (needed for the Let's Encrypt HTTP-01 challenge).
-
-## Bootstrap
+Ansible requires Ansible, kubectl, kustomize and the `kubernetes.core` collection
+on the controller. Connect through the VPN using `ssh omar@10.8.0.1` (or configure
+an `omar` SSH alias). Inventory uses normal SSH identity discovery.
 
 ```bash
 cd ansible
-ansible-playbook site.yml            # 00-prereqs → 10-k3s → 20-platform → 30-secrets → 40-migrate → 50-apps
-# or stage by stage:
-ansible-playbook site.yml --tags prereqs,k3s
-ansible-playbook site.yml --tags platform,secrets
-ansible-playbook site.yml --tags migrate,apps
+ansible-playbook site.yml
+# Individual stages:
+ansible-playbook site.yml --tags platform,secrets,apps
 ```
 
-`00-prereqs` prunes ~24 GB of Docker build cache first (the disk is otherwise 85%
-full) and asserts ≥15 GB free before continuing. The k3s role fetches a kubeconfig
-to `ansible/kubeconfig` (server URL rewritten to the VPN address) for local `kubectl`.
+Existing Keycloak and oauth2-proxy credentials are managed out of band; see
+`secrets/README.md`. A fresh install needs those credentials provisioned first.
+The manual apps playbook applies resources but does not prune retired workloads;
+use Flux for the cleanup deployment.
 
-## Data migration (do not skip — live prod state)
+## Retired services and retained data
 
-`40-data-migrate.yml` seeds local-path PVCs from existing VM directories:
-`agentic-assistent/memory` (**live** — overwriting re-fires the daily briefing and
-wipes follow-ups), `agentic-assistent/models`, `~/.pr-pilot*`, `~/wakiru`,
-`~/omarmassfih-ws`. It copies **only into empty PVC dirs**, so it's safe to re-run.
+Agentic assistant, ChatGPT proxy/browser, both PR bots, ingestion/webserver and
+Garage are retired. Their deployment manifests, build helpers, secret templates
+and migration bootstrap tasks have been removed.
 
-Because local-path provisions a PV lazily on first pod bind, the copy may report
-`SKIP-no-pv` on a fresh cluster. In that case: run `50-apps`, then
-`kubectl -n platform scale deploy --all --replicas=0`, re-run `40-data-migrate`,
-then scale back up. `codex-auth` is seeded separately by the `pvc_seed` role (a
-one-shot Job) — writable, so Codex can rotate its token in place.
+The eight existing PVCs and Dagster database declaration remain under
+`k8s/retained-data/` with Flux pruning disabled. They run no application workloads.
+The shared Postgres database, old VM source directories and existing secrets are
+preserved. This is service cleanup, not permanent erasure of historical data.
+Reclaiming those volumes or database contents requires a separate backup and
+explicit data deletion decision. Git history retains the old service manifests.
 
 ## Verify
 
 ```bash
-export KUBECONFIG=ansible/kubeconfig
-kubectl get nodes                                   # Ready
-kubectl -n platform get pods                        # all Running/Ready
-curl https://assistant.omarmassfih.no/health        # 200, valid LE cert
-curl https://backend.omarmassfih.no/db-health       # 200, cluster-local Postgres
-kubectl -n platform exec deploy/pr-pilot -- \
-  curl -s http://chatgpt-proxy.platform.svc:8765/v1/models   # 200 in-cluster
-```
-Confirm agentic memory is intact (notes/tasks present, briefing did **not** re-fire),
-both Telegram bots respond, and a pr-pilot run reaches the proxy and opens a PR.
-
-## Cutover
-
-Only after everything is verified healthy in k3s:
-
-```bash
-ansible-playbook playbooks/99-decommission.yml --tags decommission
+ssh omar@10.8.0.1 'sudo k3s kubectl -n platform get deployments,pods,cronjobs,pvc'
+curl --fail https://omarmassfih.no/
+curl --fail https://backend.omarmassfih.no/db-health
+curl --head https://rpg.omarmassfih.no/  # unauthenticated request redirects to login
+curl --fail https://auth.omarmassfih.no/realms/platform/.well-known/openid-configuration
 ```
 
-Stops the old Compose stack + the four systemd `--user` units and does a final
-docker prune. Old files are left in place for a rollback window — to roll back,
-`docker compose up -d` in `~/agentic-assistent` and `systemctl --user enable --now`
-the units, and scale the k3s deployments to 0.
-
-## Notes / assumptions to confirm
-
-- `chatgpt-browser` listen port is assumed **8766**; confirm against `browser_backend.py`.
-- pr-pilot's in-image `opencode.json` must point at `http://chatgpt-proxy.platform.svc:8765/v1`
-  (replacing the old `127.0.0.1:8765`), and its config toml + gh/git creds ship via
-  the `pr-pilot*` Secrets.
-- k3s version, ghcr org, image tags and the public domain live in
-  `ansible/group_vars/all.yml`; the ingress host is also in
-  `k8s/apps/agentic-assistent/ingress.yaml` — keep them in sync.
+The only application deployments should be `omarmassfih-backend`, `rpg-system`,
+`keycloak` and `oauth2-proxy`, plus the CNPG-managed Postgres pod. Flux and cluster
+operators remain in their own namespaces.

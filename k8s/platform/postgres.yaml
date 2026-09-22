@@ -1,4 +1,4 @@
-# CloudNativePG Postgres for the ingest / dlt data platform.
+# Shared Postgres for the notes backend, RPG and Keycloak.
 #
 # The operator (CRDs + controller in namespace cnpg-system) is installed
 # out-of-band by the Ansible `cnpg_operator` role in 20-platform. This manifest

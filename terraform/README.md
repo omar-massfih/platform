@@ -33,7 +33,7 @@ Delete `import.tf`, set your own `compartment_ocid` / `availability_domain`, the
 terraform init && terraform apply
 ```
 
-`terraform output public_ip` → set the `assistant.<domain>` DNS A record to it,
+`terraform output public_ip` → set the `backend.<domain>`, `rpg.<domain>` and `auth.<domain>` DNS A record to it,
 then run `cd ../ansible && ansible-playbook site.yml`.
 
 ## Notes
